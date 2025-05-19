@@ -24,29 +24,314 @@
   </head>
   <body>
     <section id="abstract">
-      <p>This document investigate exiting AI agent protocols.</p>
-     
+      <h2>Abstract</h2>
+      <p>This paper explores the evolution from the unfulfilled vision of the Semantic Web to the emerging Agentic Web, and analyzes the necessity of building standardized agent protocols. Although the Semantic Web concept proposed twenty years ago was highly forward-thinking, it was limited by the insufficient capabilities of artificial intelligence technology at that time and was not fully realized. With the rapid development of modern AI technologies such as Large Language Models (LLMs), agents now have the ability to autonomously execute tasks, perform complex reasoning, and solve multi-step problems, giving rise to the Agentic Web. Through systematic analysis, this paper identifies four core trends of the Agentic Web: agents replacing traditional software as internet infrastructure, universal interconnection between agents, protocol-based native connection modes, and agents' autonomous organization and collaboration capabilities. At the same time, the research reveals three major challenges posed by the current internet architecture to the development of the Agentic Web: data silos limiting the quality of agent decision-making, human-machine interfaces hindering agent interaction efficiency, and the absence of standard protocols impeding agent collaboration. In response to these challenges, this paper elaborates on the design principles and core requirements of agent protocols, and provides a systematic comparison and analysis of current major agent protocol initiatives (MCP, A2A, ACP, ANP, etc.). The conclusion emphasizes that establishing standardized agent protocols is crucial for breaking data silos, enabling heterogeneous agent collaboration, building AI-native data networks, and ultimately realizing an open and efficient Agentic Web, and calls for active participation from all stakeholders in the W3C standardization process.</p>
     </section>
-    <section id="sotd">
-      
-    </section>
-
-    <section id="introduction">
-      <h2>Introduction</h2>
-      <p>to be added.</p>
     
+    <section id="introduction">
+      <h2>1. Introduction: From the Unfulfilled Vision of the Semantic Web to the Dawn of the Agentic Web</h2>
+      
+      <p>Twenty years ago, Tim Berners-Lee and his collaborators visionary proposed the concept of the Semantic Web, with the core goal of creating a "web of data" where the meaning of most information is machine-readable, enabling better collaboration between computers and humans. This vision depicted a future where daily transactions, administrative affairs, and various life mechanisms would be handled by "intelligent agents" through machine-to-machine dialogues. The Semantic Web aimed to give information clearly defined meanings through technologies such as XML, RDF, and ontologies, allowing software agents to roam between web pages and execute complex tasks on behalf of users.</p>   
+      
+      <p>Although the vision of the Semantic Web was forward-thinking and has inspired profound influence, it remains largely unrealized. The root cause lies in the limitations of artificial intelligence (AI) capabilities at that time. Early AI technologies had significant deficiencies in processing and understanding natural language, performing complex reasoning, and handling massive, ambiguous, inconsistent, or uncertain data in the real world. The complexity of automatic knowledge representation, acquisition, and large-scale reasoning were obstacles that AI could not overcome at that time. However, the current technological revolution represented by Large Language Models (LLMs) is injecting new powerful energy into realizing this grand vision. Modern AI has made tremendous progress in understanding unstructured data, multi-step reasoning, planning, and interacting with existing tools and APIs, which precisely compensates for some key shortcomings of early AI in achieving the goals of the Semantic Web.</p>   
+      
+      <p>Notably, the original conception of the Semantic Web already included numerous concepts about "agents." Berners-Lee and others explicitly stated that the realization of the Semantic Web would promote "the long-touted 'agents' to finally emerge." These agents were envisioned as entities that could automatically execute tasks on behalf of users. In recent years, the rapid development of artificial intelligence technology, especially breakthroughs in Large Language Models (LLMs), has given rise to numerous complex AI agents capable of autonomous action, complex reasoning, and solving multi-step problems. These agents are no longer merely passive tools but active participants in the digital ecosystem. As a result, the concept of the "Agentic Web" or "Intelligent Internet" has emerged. This is a new network paradigm where AI agents become the main actors, interacting with network resources, services, and other agents to accomplish user goals. The Agentic Web inherits and strives to realize this core vision of the Semantic Web, utilizing current advanced AI capabilities to build an ecosystem composed of autonomous, intelligent, and collaborative AI agents, thus promising to turn the Semantic Web's ideal of machine intelligence processing information and more efficiently assisting humans into reality.</p>   
+      
+      <p>This transformation signals a fundamental change in user interaction patterns—from human-centered clicking and browsing through browsers to agent-driven operations. In this new model, agents can directly access APIs, automatically execute tasks, and provide personalized experiences based on user preferences and context. This agent-led interaction mode is not just an incremental update to the existing network but may bring about a fundamental transformation in internet architecture and interaction logic. Current network interactions are primarily driven by humans through browsers, while agent AI introduces entities capable of autonomously completing complex tasks without direct human intervention at every step. This means that the way users obtain information may shift from pulling through user interfaces to agents directly executing tasks and delivering results, potentially bypassing traditional website interfaces. Such a transformation necessarily demands changes in how network services are designed (e.g., "agent-responsive design") and how agents discover and interact with these services, indicating that its impact has exceeded the scope of simply adding AI functionality to the existing network.</p>
     </section>
-   <section>
-    <h2>ANP</h2>
-    <p></p>
-   </section>
+    <section id="trends">
+      <h2>2. Four Major Trends of the Agentic Web</h2>
+      
+      <p>Based on the above analysis, we believe that the internet is experiencing a profound new round of transformation centered around agents. This transformation is manifested in the following four key trends.</p>
+      
+      <section>
+        <h3>2.1 Agents Will Comprehensively Replace Traditional Software</h3>
+        
+        <p>In the future, agents will gradually replace existing software applications and become an important infrastructure of the internet (5). At the personal level, AI assistants will replace the vast majority of existing websites and apps, becoming the main entry point for users to access the internet (10). Compared to traditional websites or apps, personal AI assistants can achieve order-of-magnitude improvements in information integration, decision support, and scenario interaction experiences. At the enterprise level, businesses will deploy agents to connect and interact directly with users on the internet, providing precise and efficient services (7). Meanwhile, a new connection paradigm is forming, represented by point-to-point, de-platformized connections between personal assistants and enterprise agents.</p>
+      </section>
+      
+      <section>
+        <h3>2.2 Universal Interconnection Between Agents</h3>
+        
+        <p>The second core trend of the Agentic Web is to achieve free connection between any agents, which will completely break the current data silo pattern of the internet and realize the free flow of information (12). A fully connected network of agents enables AI to fully access cross-domain, cross-platform comprehensive contextual information, thereby helping individuals and enterprises make more comprehensive and precise decisions (16). At the same time, this open connection model allows agents to call upon all tool capabilities across the network, greatly expanding the depth and complexity of agent collaboration (11), and agent-to-agent interaction will thus become the most mainstream connection method in the future internet.</p>
+      </section>
+      
+      <section>
+        <h3>2.3 Protocol-Based Native Connection Mode for Agents</h3>
+        
+        <p>Currently, AI interacts with the internet mainly through human-centered design methods such as browsers or software interfaces (Computer Use / Browser Use) (17). However, these methods are only temporary transitional solutions and cannot fully unleash AI's potential. AI is inherently better at directly processing underlying structured data and semantic information rather than human interfaces and webpage HTML (8). Therefore, we believe that in the future, agents will inevitably connect through communication protocols specifically designed for AI native use, which will be widely applied like HTTP and become industry standards (15). Based on this protocol, a brand new data network specifically designed for AI, more accessible and operable by agents, will also emerge.</p>
+      </section>
+      
+      <section>
+        <h3>2.4 Agents Can Organize and Collaborate Autonomously</h3>
+        
+        <p>The fourth core trend of the Agentic Web is the ability of agents to organize and collaborate autonomously. Supported by standard protocols, agents can use natural language for flexible automatic negotiation, quickly clarify each other's needs, and dynamically form collaborative relationships to complete complex tasks together (7). This collaboration mode, which does not require fixed structured interfaces, greatly improves network operational efficiency and task response capability, while significantly reducing manual intervention and communication costs. As a result, a highly flexible, efficient, and low-cost Agentic Web will gradually form (11).</p>
+      </section>
+      
+      <p>Given these trends, we urgently need new agent protocols to support the development of the Agentic Web, thereby unleashing the full potential of AI agents.</p>
+    </section>
+    
+    <section id="challenges">
+      <h2>3. Challenges of the Agentic Web: Limitations of the Current Internet and the Urgent Need for Standardized Interaction</h2>
+      
+      <p>With the development of large models and autonomous decision-making AI, agents are becoming a new type of internet entity following websites and apps (7). Agents are expected to replace existing software and become an important component of the internet (5). However, the flourishing development of the Agentic Web also faces severe challenges brought by the current internet technology foundation and connection paradigm. These challenges are mainly manifested in the following aspects:</p>
+      
+      <ul>
+        <li><strong>Data Silos Limiting Agent Decision Quality</strong>: Agents need to integrate extensive information to make high-quality decisions. However, data on the current internet is scattered across disconnected platforms, forming "data silos" (12). This prevents agents from obtaining complete contextual information, severely constraining their analysis, reasoning, and decision-making capabilities.</li>
+        
+        <li><strong>Human-Machine Interfaces Hindering Agent Interaction Efficiency</strong>: Most existing network services are designed for humans through graphical user interfaces (GUIs) (17). Agents need to simulate human operations to use these services, making the process complex, inefficient, and error-prone (8). There is an urgent need to provide native, machine-readable interface protocols for agents to achieve direct and efficient automated interaction (8).</li>
+        
+        <li><strong>Lack of Standard Protocols Impeding Agent Collaboration</strong>: There is a lack of unified communication language and collaboration norms between agents (18). Although natural language provides a means of communication, it is insufficient to support large-scale, reliable, automated agent collaboration. Establishing standardized protocols is key to networking agents and leveraging collective intelligence (11).</li>
+      </ul>
+      
+      <p>These challenges, especially the lack of standardized agent protocols, will lead to fragmentation of the agent ecosystem in the future. A large number of heterogeneous agents will exist as "agent islands," making interoperability and effective collaboration difficult, not only limiting the overall potential of the Agentic Web but also significantly increasing integration costs and complexity (18).</p>
+      
+      <p>Facing this situation, establishing standardized agent protocols has become an urgent priority for building a true Agentic Web. Such protocols aim to provide a unified framework for discovery, identification, communication, and collaboration among agents from different platforms and vendors, thereby overcoming interoperability barriers and ensuring secure and efficient interactions (11). The establishment of the W3C AI Agent Protocol Community Group and its mission is a positive response to this need (11). Standardization is not only a technical requirement but also a strategic cornerstone to prevent the Agentic Web from becoming Balkanized, to fully leverage its network effects, and to realize the vision of "billions of agents" working collaboratively (18).</p>
+    </section>
+    <section id="blueprint">
+  <h2>4. Defining the Blueprint: Design Principles and Core Requirements for Agent Protocols</h2>
+  
+  <p>To address the challenges presented in Chapter 3 and fully realize the potential of the Agentic Web, designing and implementing standardized agent protocols is essential. These protocols are not just technical specifications but foundational elements for building an interoperable, trustworthy, and efficient agent ecosystem. A comprehensive agent protocol framework needs to address a series of key issues and meet specific functional and non-functional requirements.</p>
+  
   <section>
-    <h2>A2A</h2>
-    <p></p>
+    <h3>4.1 Key Issues That Agent Protocols Aim to Solve</h3>
+    
+    <ul>
+      <li><strong>Interconnectivity and Breaking Data Silos</strong>: Protocols need to provide mechanisms for agents created by different platforms and developers to discover, connect, and communicate with each other, thereby breaking down the data silos prevalent in the current internet. This requires protocols to support cross-domain communication and promote the free flow of information, ensuring agents can access complete contextual information needed for high-quality decision-making.</li>
+      
+      <li><strong>Collaboration Between Heterogeneous Agents</strong>: The Agentic Web will consist of numerous heterogeneous agents with different architectures, capabilities, and goals. Protocols must address communication and collaboration issues between these heterogeneous agents, for example, through standardized message formats, interaction patterns, and capability description mechanisms, enabling them to understand each other and work together (16).</li>
+      
+      <li><strong>Compatibility and Standard Reuse</strong>: To promote widespread adoption and integration, agent protocols should be compatible with and reuse existing mature Web standards and technologies (such as HTTP, WebRTC, OpenAPI, WoT, etc.) where possible (11). This not only reduces development and deployment barriers but also helps leverage the stability and security of existing network infrastructure.</li>
+      
+      <li><strong>Efficient Collaboration and Privacy-Preserving Interaction Models</strong>: Protocols need to define information interaction models between agents that ensure both collaboration efficiency and user privacy and data security (11). This may involve encrypting communication content, supporting selective information sharing, and defining access control mechanisms of varying granularity.</li>
+      
+      <li><strong>Building Trust and Reducing Collaboration Costs</strong>: In the open Agentic Web, trust between agents is a core issue. Protocols should include mechanisms for establishing and verifying agent identity, reputation, and capabilities to reduce the risks and costs of collaboration between unknown agents and promote trustworthy interactions.</li>
+    </ul>
   </section>
+  
   <section>
-    <h2>ACP</h2>
-    <p></p>
+    <h3>4.2 Core Functional Requirements for Agent Protocols</h3>
+    
+    <p>A comprehensive agent protocol should meet the following core functional requirements to support the effective operation of agents in the Agentic Web:</p>
+    
+    <ul>
+      <li><strong>Agent Identity</strong>: Mechanisms for establishing and verifying agent identity to ensure the credibility of interactions and reliability of sources (11).</li>
+      
+      <li><strong>Agent Description</strong>: Standardized ways to describe an agent's capabilities, interfaces, goals, and available services, allowing other agents to understand its functionality (11).</li>
+      
+      <li><strong>Agent Discovery</strong>: Enabling agents to dynamically find other agents in the network based on specific needs or capabilities (11).</li>
+      
+      <li><strong>Agent Data Exchange</strong>: Defining standardized formats and processes for agents to exchange information, instructions, and context, ensuring effective communication and collaboration (11).</li>
+    </ul>
   </section>
+  
+  <section>
+    <h3>4.3 Key Non-Functional Requirements for Agent Protocols</h3>
+    
+    <p>In addition to core functionality, agent protocols must meet a series of key non-functional requirements to ensure their usability, reliability, and trustworthiness in the real world:</p>
+    
+    <ul>
+      <li><strong>Security</strong>: Robust authentication, authorization, data integrity, confidentiality (e.g., end-to-end encryption) mechanisms, and protection against common threats (11).</li>
+      
+      <li><strong>Privacy</strong>: Support for privacy protection technologies, data minimization, and compliance with relevant regulations (11).</li>
+      
+      <li><strong>Scalability</strong>: Ability to efficiently support a large and growing number of agents and interactions (11).</li>
+      
+      <li><strong>Extensibility</strong>: Designed to adapt to future developments in AI capabilities and new agent interaction patterns.</li>
+      
+      <li><strong>Interoperability</strong>: Ensuring compatibility with existing Web protocols and standards where appropriate, and enabling agents from different developers/platforms to work together (11).</li>
+      
+      <li><strong>Verifiability and Accountability</strong>: Supporting mechanisms for auditing agent interactions and determining responsibility for agent behaviors (16).</li>
+    </ul>
+  </section>
+  
+  <p>By addressing the key issues above and meeting these core requirements, standardized agent protocols will lay a solid foundation for building a prosperous, collaborative, and trustworthy Agentic Web.</p>
+</section>
+<section id="protocol-overview">
+  <h2>5. Overview of Current Agent Protocol Initiatives</h2>
+  
+  <p>This section aims to provide a neutral overview of current and emerging agent protocols, highlighting how they address the challenges and requirements discussed earlier. These protocols each target different aspects of interoperability and deployment scenarios, collectively forming the exploratory frontier of standardization in agent communication (21).</p>
+
+  <section>
+    <h3>5.1 Model Context Protocol (MCP)</h3>
+    
+    <ul>
+      <li><strong>Description</strong>: MCP is an open standard initiated by Anthropic and now open-sourced, designed to standardize how applications provide context to large language models (LLMs) (31). It is metaphorically described as the "USB-C port for AI applications," aiming to solve the M×N integration challenge faced when connecting AI models with external data sources, tools, and systems (such as cloud platforms, enterprise databases, local files) (19). By providing a unified interface, MCP simplifies interactions between AI models and the external world, reducing the need to build custom connectors for each new data source or tool (31).</li>
+      
+      <li><strong>Key Features/Mechanisms</strong>: MCP employs a client-server architecture where AI applications (such as chat assistants, AI-driven IDEs) act as MCP clients, connecting to one or more MCP servers that expose capabilities or data (31). Its core interaction primitives include: Tools (dynamically callable executable functions, such as API calls), Resources (structured static data streams for AI reference), and Prompts (reusable conversational workflows or templates) (31). The protocol layer handles message framing, request/response mapping, and notification delivery, supporting various transport protocols such as Stdio for local processes and HTTP+SSE for network services (32).</li>
+      
+      <li><strong>Focus Areas/Target Challenges</strong>: MCP's core objectives are to provide structured context injection for LLMs, enable flexible tool and knowledge integration, support secure infrastructure integration, and ensure compatibility across different LLM vendors (19). It strives to enhance AI models' context awareness and dynamic tool discovery and execution capabilities (31).</li>
+      
+      <li><strong>Core Technologies Used</strong>: JSON-RPC (for client-server interface) (21), HTTP, Server-Sent Events (SSE) (32).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>5.2 Agent-to-Agent Protocol (A2A) (Google)</h3>
+    
+    <ul>
+      <li><strong>Description</strong>: A2A is an open protocol initiated by Google and jointly developed with over 50 industry partners, designed to enable independent AI agents built on different frameworks and by different vendors to communicate, collaborate, and coordinate actions securely and seamlessly (24). It addresses interoperability challenges in heterogeneous agent ecosystems, allowing agents to work together without exposing their internal states, memories, or tools (24).</li>
+      
+      <li><strong>Key Features/Mechanisms</strong>: A2A's core architecture revolves around client agents and remote agents (38). Agents publish their identities, capabilities, skills, service endpoints, and authentication requirements through "Agent Cards" (JSON metadata documents), enabling capability discovery (24). The protocol supports task management lifecycles, allowing creation, sending, and tracking of task statuses, and can handle long-running tasks that might take hours or even days (38). A2A supports multiple interaction modalities, including text, files, structured JSON data, as well as audio and video streams (38).</li>
+      
+      <li><strong>Focus Areas/Target Challenges</strong>: A2A focuses on enabling dynamic interactions, capability sharing, and task coordination between opaque, autonomous agents, particularly in enterprise-level workflows (18). It aims to break down agent silos, simplify enterprise integration, and foster a more interconnected and powerful AI ecosystem. A2A is viewed as complementary to MCP, with MCP focusing on connecting agents with tools/data and A2A focusing on agent-to-agent collaboration (41).</li>
+      
+      <li><strong>Core Technologies Used</strong>: HTTP(S) (as the transport layer, requiring TLS encryption) (38), JSON-RPC 2.0 (as the payload format for requests and responses) (24), Server-Sent Events (SSE) (for real-time streaming communication from server to client, such as task status updates) (24).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>5.3 Agent Connect Protocol (ACP) (Cisco)</h3>
+    
+    <ul>
+      <li><strong>Description</strong>: ACP is an open-source protocol driven by Cisco and others as part of the AGNTCY initiative, designed to provide a communication layer for autonomous agents in distributed systems to collaborate and share resources (20). It focuses on enabling structured, persistent multi-agent workflows and collaboration within enterprise or cloud-based agent ecosystems (20).</li>
+      
+      <li><strong>Key Features/Mechanisms</strong>: ACP employs RESTful APIs as a standard interface, defining how agents interact, including retrieving workflows that agents can execute, creating and managing context threads, and running agents (27). It supports stateful communication threads, allowing agents to negotiate and reason together on tasks, and implements loosely coupled interactions through message passing (20). Agent discovery is achieved through an Agent Directory and Agent Manifests (JSON files describing agent functionality, invocation methods, input/output patterns, etc.) (42). ACP supports asynchronous-first interactions, multi-part messages, and observability features (19).</li>
+      
+      <li><strong>Focus Areas/Target Challenges</strong>: ACP primarily addresses communication barriers and collaboration efficiency issues between heterogeneous agents (potentially built on different technology stacks or frameworks) in enterprise environments (42). It aims to enable scalable, standardized multi-agent interactions, allowing multiple agents to work together as a logical unit to complete complex tasks (JTBD - Job to Be Done) (27).</li>
+      
+      <li><strong>Core Technologies Used</strong>: RESTful API (27), JSON (for Agent Manifests and message schemas) (20). Can integrate with workflow frameworks such as LangGraph (42).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>5.4 Agent Network Protocol (ANP)</h3>
+    
+    <ul>
+      <li><strong>Description</strong>: ANP is an open-source protocol with the vision of becoming "HTTP for the Agentic Web era," designed to build an open, secure, and efficient collaborative network for billions of agents. It addresses the inadequacies of current internet infrastructure in meeting the specific needs of agent networks (17). ANP is developed and maintained by the open-source community, which is committed to an open, neutral stance, and the community pledges never to commercialize.</li>
+      
+      <li><strong>Key Features/Mechanisms</strong>: ANP adopts a three-layer architecture (17):
+        <ol>
+          <li><strong>Identity and Encrypted Communication Layer</strong>: Builds decentralized authentication schemes and end-to-end encrypted communication based on W3C DID (Decentralized Identifier) specifications, enabling cross-platform agents to authenticate each other without relying on centralized systems.</li>
+          <li><strong>Meta-Protocol Layer</strong>: A protocol for negotiating communication protocols between agents, key to enabling self-organization and self-negotiation of efficient collaboration in agent networks.</li>
+          <li><strong>Application Protocol Layer</strong>: Based on semantic web specifications, allowing agents to describe their capabilities and supported application protocols, and efficiently manage these protocols. An agent's entry point is an Agent Description Document (45).</li>
+        </ol>
+      </li>
+      
+      <li><strong>Focus Areas/Target Challenges</strong>: ANP aims to solve three core challenges: achieving interconnectivity between all agents, breaking data silos, and ensuring AI can access comprehensive contextual information; providing AI-native interfaces for efficient AI interaction with the digital world through APIs or communication protocols rather than mimicking human operations; and utilizing AI to enable automatic organization and negotiation between agents, building a more economically efficient collaborative network. It particularly focuses on decentralized discovery and collaboration in open internet environments, as well as interoperability across heterogeneous domains.</li>
+      
+      <li><strong>Core Technologies Used</strong>: W3C Decentralized Identifiers (DIDs) (17), JSON-LD (20), W3C Verifiable Credentials (VC), end-to-end encryption technologies.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>5.5 Protocol Comparison Analysis</h3>
+    
+    <p>To clearly compare the major protocols described above, the following table summarizes some of their key characteristics:</p>
+  </section>
+</section>
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Model Context Protocol (MCP)</th>
+      <th>Agent-to-Agent Protocol (A2A)</th>
+      <th>Agent Connect Protocol (ACP)</th>
+      <th>Agent Network Protocol (ANP)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Main Supporters/Initiators</strong></td>
+      <td>Anthropic</td>
+      <td>Google with 50+ industry partners</td>
+      <td>Cisco (AGNTCY initiative)</td>
+      <td>ANP open-source community</td>
+    </tr>
+    <tr>
+      <td><strong>Primary Goals/Focus Areas</strong></td>
+      <td>Providing structured external context for LLMs/agents, solving M×N integration challenges</td>
+      <td>Cross-vendor/framework interoperability between heterogeneous agents, task collaboration and dynamic negotiation</td>
+      <td>Structured, persistent multi-agent collaboration and workflows in enterprise environments</td>
+      <td>Agent connectivity and collaboration on the internet</td>
+    </tr>
+    <tr>
+      <td><strong>Communication Style</strong></td>
+      <td>Client-server</td>
+      <td>Client-remote agent (peer-to-peer concept, possibly with intermediaries), task-oriented</td>
+      <td>RESTful API, executable message passing, supporting stateful threads</td>
+      <td>Peer-to-peer protocol architecture</td>
+    </tr>
+    <tr>
+      <td><strong>Core Technologies Used</strong></td>
+      <td>JSON-RPC, HTTP, SSE</td>
+      <td>HTTP(S), JSON-RPC 2.0, SSE</td>
+      <td>RESTful APIs, JSON (for Schemas/Manifests)</td>
+      <td>W3C DIDs, JSON-LD, W3C VC, End-to-End Encryption</td>
+    </tr>
+    <tr>
+      <td><strong>Discovery Mechanism</strong></td>
+      <td>Typically managed by application integration or host application</td>
+      <td>Agent Cards (JSON metadata, typically published at /.well-known/agent.json)</td>
+      <td>Agent Directory, Agent Manifests (JSON)</td>
+      <td>Based on RFC 8615, typically published at /.well-known/agent-descriptions</td>
+    </tr>
+    <tr>
+      <td><strong>Identity Management Method</strong></td>
+      <td>OAuth 2.1</td>
+      <td>Out-of-band authentication schemes</td>
+      <td>Dependent on enterprise integration (e.g., OAuth)</td>
+      <td>W3C DIDs (Decentralized Identifiers)</td>
+    </tr>
+    <tr>
+      <td><strong>Emphasized Security Features</strong></td>
+      <td>Secure context acquisition (e.g., via TLS), local-first security</td>
+      <td>TLS, server authentication, client/user authentication, optional in-task verification</td>
+      <td>TLS, enterprise-grade security practices</td>
+      <td>End-to-end encryption, DID-based authentication</td>
+    </tr>
+    <tr>
+      <td><strong>State Management</strong></td>
+      <td>Typically stateless or managed by client/host application, though MCP servers can expose stateful resources</td>
+      <td>Supports long-running task state tracking (stateful interactions)</td>
+      <td>Stateful communication threads</td>
+      <td>Can support stateful interactions (determined by application protocol layer)</td>
+    </tr>
+    <tr>
+      <td><strong>Key Differentiators/Unique Aspects</strong></td>
+      <td>Focuses on the "last mile" connection between models and tools/data, complementary to other protocols</td>
+      <td>Emphasizes open standards for agent collaboration across different systems and vendors, supports multiple interaction modalities</td>
+      <td>Deep collaboration in controlled enterprise environments</td>
+      <td>Suited for agent interactions and collaboration in untrusted internet environments</td>
+    </tr>
+  </tbody>
+</table>
+<section>
+    <h2>6. Building AI-Native Data Networks Based on Agent Protocols</h2>
+    <p>Current internet infrastructure is primarily designed for human interaction through browsers and graphical user interfaces (17). However, the rise of the Agentic Web requires us to reimagine a network environment better suited for AI agents' native interactions. This "AI-native data network" will no longer be merely a platform for displaying human information, but an optimized space for agents to efficiently acquire data, invoke services, and collaborate.</p>
+    
+    <p>The core characteristics of such a network will include:</p>
+    
+    <ul>
+      <li><strong>Machine-Readable Interfaces First</strong>: Services and data sources will expose their functionality and information through standardized, agent-friendly APIs (rather than primarily relying on human user interfaces) (17). This will greatly reduce the complexity and overhead for agents to access and utilize network resources.</li>
+      
+      <li><strong>Enhanced Semantic and Structured Data</strong>: Data will be not just accessible but understandable. Drawing on semantic web concepts and combined with modern AI's comprehension capabilities, data will be given richer semantic descriptions and structured representations, enabling agents to reason and make decisions more precisely (17).</li>
+      
+      <li><strong>Communication Protocols Optimized for AI</strong>: Beyond general agent protocols, underlying network communications may need to be optimized for the characteristics of agent interactions, such as supporting low-latency, high-throughput data exchange, and more flexible communication patterns.</li>
+      
+      <li><strong>Dynamic Service Discovery and Composition</strong>: Agents will be able to dynamically discover needed services and data in this network, and flexibly combine them according to task requirements, achieving complex collaborative task solutions.</li>
+    </ul>
+    
+    <p>The AI-native data network will be a key infrastructure for the Agentic Web to fully realize its potential, enabling agents to interact with the digital world in their most proficient way (i.e., directly processing information through protocols and APIs), thereby fostering higher levels of automation, intelligence, and collaborative efficiency.</p>
+  </section>
+
+  <section>
+    <h2>7. Future Outlook: Reshaping the Open Network Through Connection</h2>
+    
+    <p>The evolution of the internet profoundly confirms a core principle: "Connection is Power." In a truly open, interconnected network, free interaction between nodes can maximize innovation potential and create tremendous value. However, the current internet ecosystem is increasingly dominated by a few large platforms, with vast amounts of data and services confined in closed "digital islands," concentrating the power of connection in the hands of a few tech giants.</p>
+    
+    <p>The advent of the Agentic Web era provides us with a historic opportunity to reshape this imbalanced landscape. Our goal is to drive the internet from its current generally closed, fragmented state back to its open, freely connected origins. In the future Agentic Web, each agent will simultaneously play the dual roles of information consumer and service provider. More importantly, each node should be able to discover, connect, and interact with any other node in the network without barriers. This vision of full interconnectivity will greatly lower the threshold for information flow and collaboration, returning the power of connection truly to every user and individual agent.</p>
+    
+    <p>This marks an important shift: from platform-centered closed ecosystems to protocol-centered open ecosystems. In the latter, value acquisition depends more on the unique capabilities and contributions that participants bring to the network by following open protocols, rather than depending on control of a closed platform. This shift will stimulate more intense application-layer innovation and competition, as the key to success will no longer be "locking in" users, but providing superior agent services, similar to the innovation patterns historically promoted by open protocols (such as TCP/IP, SMTP).</p>
+  </section>
+
+  <section>
+    <h2>8. Building a Collaborative Agentic Web for the Future</h2>
+    
+    <p>Standardized agent protocols are crucial for unleashing the potential of the Agentic Web, realizing certain aspects of the original semantic web vision, and fostering innovation. They are the cornerstone for building a network where machines can process information more intelligently and assist humans more effectively.</p>
+    
+    <p>We urge all stakeholders to actively participate in the standardization process through W3C. This is an opportunity to shape the future network—one that is smarter, more collaborative, and more empowering, built on foundations of openness and trust. A well-designed Agentic Web has enormous transformative potential, and now is the critical moment to lay its solid foundation.</p>
+  </section>
+
   </body>
 </html>
