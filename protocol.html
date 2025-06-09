@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="en">
   <head>
-    
     <meta charset="utf-8">
     <title>Protocol(Tentative)</title>
     <script src="https://www.w3.org/Tools/respec/respec-w3c" class="remove"></script>
@@ -12,27 +11,26 @@
         shortName: "Protocol(Tentative)",
         editors: [
           {
-          name: "Gaowei Chang",
-          company:"ANP Open Source Community",
-          companyURL:"https://agent-network-protocol.com/"
-         }
+            name: "Gaowei Chang",
+            company:"ANP Open Source Community",
+            companyURL:"https://agent-network-protocol.com/"
+          }
+        ],
+        authors: [
 
-      ],
-      authors: [
-
-      ],
+        ],
         group: "cg/agentprotocol",
         github:"w3c-cg/ai-agent-protocol"
       };
     </script>
     <style>
       table {
-              border-collapse: collapse; 
-              width: 100%; 
-            }
-            table, th, td {
-              border: 1px solid black; 
-            }
+        border-collapse: collapse; 
+        width: 100%; 
+      }
+      table, th, td {
+        border: 1px solid black; 
+      }
     </style>
   </head>
   <body>
@@ -46,116 +44,124 @@
     <section id="introduction">
       <h2>Introduction</h2>
       
-      <p class="ednote">TODO: This section needs further development and refinement.</p>   
+      <p class="ednote">TODO: This section needs further development and refinement.</p>
       
-    </section>
-    
-    <section id="conformance">
-      <h2>Conformance</h2>
-      <p>This specification defines conformance criteria that apply to a single product: an Agent Network Protocol (ANP) implementation.</p>
+      <section id="design-goals">
+        <h3>Design Goals</h3>
+        <p class="ednote">TODO: This section needs further development and refinement.</p>
+      </section>
+      
+      <section id="architecture-overview">
+        <h3>Architecture Overview</h3>
+        <p class="ednote">TODO: This section needs further development and refinement.</p>
+      </section>
+      
+      <section id="conformance">
+        <h3>Conformance</h3>
+        
+        <p>As well as sections marked as non-normative, all authoring guidelines, diagrams, examples, and notes in this specification are non-normative. Everything else in this specification is normative.</p>
+        
+        <p>The key words MAY and MUST in this document are to be interpreted as described in <a href="https://datatracker.ietf.org/doc/html/bcp14">BCP 14</a> [[RFC2119]] [[RFC8174]] when, and only when, they appear in all capitals, as shown here.</p>
+        
+        <p>This section is normative.</p>
+        
+        <p>The content of WAI-Adapt Symbols consists of numeric values for the adapt-symbol attribute for any span of text and taken from the <a href="https://www.w3.org/TR/aac-registry/">W3C Augmentative and Alternative Communication (AAC) Symbols Registry specification</a> [[aac-registry]] corresponding to the concept associated with that Registry numeric value. Authors MAY use this attribute in HTML content to enhance the personalizability of the content ad libitum. There is no requirement that all content must be marked with adapt-symbol index values, and there is no minimum.</p>
+        
+      </section>
+      
     </section>
 
     <section id="agent-identity">
       <h2>Agent Identity</h2>
       
-      <section>
-        
-        <p>The primary objective of the Agent Identity module is to address the interconnection and interoperability challenges between any two agents, particularly when these agents belong to different companies, organizations, or development platforms. They must be able to mutually identify, establish trust, and transfer identity information:</p>
-        <ul>
-          <li><strong>Mutual Recognition</strong>: Agents can accurately identify each other's identity, origin, and trustworthiness.</li>
-          <li><strong>Trust Establishment</strong>: Agents can establish trusted communication connections through standardized identity verification mechanisms without pre-established relationships.</li>
-          <li><strong>Identity Transfer</strong>: Agent identity information can maintain consistency and integrity across cross-platform interactions.</li>
-        </ul>
-        
-        <p>Therefore, agent identity protocols must possess excellent interoperability.</p>
-        
-        <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent identity standards.</p>
-      </section>
+      <p>The primary objective of the Agent Identity module is to address the interconnection and interoperability challenges between any two agents, particularly when these agents belong to different companies, organizations, or development platforms. They must be able to mutually identify, establish trust, and transfer identity information:</p>
+      <ul>
+        <li><strong>Mutual Recognition</strong>: Agents can accurately identify each other's identity, origin, and trustworthiness.</li>
+        <li><strong>Trust Establishment</strong>: Agents can establish trusted communication connections through standardized identity verification mechanisms without pre-established relationships.</li>
+        <li><strong>Identity Transfer</strong>: Agent identity information can maintain consistency and integrity across cross-platform interactions.</li>
+      </ul>
+      
+      <p>Therefore, agent identity protocols must possess excellent interoperability.</p>
+      
+      <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent identity standards.</p>
       
     </section>
 
     <section id="agent-description">
       <h2>Agent Description</h2>
       
-      <section>
-        <p>The core objective of the Agent Description module is to establish standardized agent description mechanisms, enabling agents to clearly publish their basic information, service capabilities, and interaction interfaces to other agents in the network, thereby achieving efficient capability discovery and collaboration matching:</p>
-        
-        <ul>
-          <li><strong>Basic Information Description</strong>: Agents can standardize the description of their name, version, affiliated organization, service scope, and other fundamental metadata.</li>
-          <li><strong>Capability Declaration</strong>: Agents can clearly declare the functions they can provide, service types, processing capabilities, and areas of expertise.</li>
-          <li><strong>Interface Specification</strong>: Agents can detail the API interfaces they provide externally, data formats, invocation methods, and parameter requirements.</li>
-          <li><strong>Interaction Protocols</strong>: Agents can declare the communication protocols, message formats, and interaction modes they support.</li>
-          <li><strong>Service Conditions</strong>: Agents can describe service availability, performance metrics, usage limitations, and access permission requirements.</li>
-        </ul>
-        
-        <p>Therefore, agent description protocols must possess good extensibility and semantic clarity, ensuring that different agents can accurately understand each other's capability boundaries.</p>
-        
-        <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent description standards.</p>
-      </section>
+      <p>The core objective of the Agent Description module is to establish standardized agent description mechanisms, enabling agents to clearly publish their basic information, service capabilities, and interaction interfaces to other agents in the network, thereby achieving efficient capability discovery and collaboration matching:</p>
+      
+      <ul>
+        <li><strong>Basic Information Description</strong>: Agents can standardize the description of their name, version, affiliated organization, service scope, and other fundamental metadata.</li>
+        <li><strong>Capability Declaration</strong>: Agents can clearly declare the functions they can provide, service types, processing capabilities, and areas of expertise.</li>
+        <li><strong>Interface Specification</strong>: Agents can detail the API interfaces they provide externally, data formats, invocation methods, and parameter requirements.</li>
+        <li><strong>Interaction Protocols</strong>: Agents can declare the communication protocols, message formats, and interaction modes they support.</li>
+        <li><strong>Service Conditions</strong>: Agents can describe service availability, performance metrics, usage limitations, and access permission requirements.</li>
+      </ul>
+      
+      <p>Therefore, agent description protocols must possess good extensibility and semantic clarity, ensuring that different agents can accurately understand each other's capability boundaries.</p>
+      
+      <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent description standards.</p>
       
     </section>
 
     <section id="agent-discovery">
       <h2>Agent Discovery</h2>
       
-      <section>
-        <p>The core objective of the Agent Discovery module is to establish efficient agent discovery mechanisms, enabling agents to be conveniently found and accessed by other agents in different network environments, thereby building dynamic and open agent collaboration networks:</p>
-        
-        <ul>
-          <li><strong>Internet Discovery</strong>: Agents can register their services across the global internet and be found by other agents through standardized discovery protocols.</li>
-          <li><strong>Local Network Discovery</strong>: Agents can automatically broadcast and discover each other within local area networks, supporting agent collaboration within enterprises and private networks.</li>
-        </ul>
-        
-        <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent discovery standards.</p>
-      </section>
+      <p>The core objective of the Agent Discovery module is to establish efficient agent discovery mechanisms, enabling agents to be conveniently found and accessed by other agents in different network environments, thereby building dynamic and open agent collaboration networks:</p>
+      
+      <ul>
+        <li><strong>Internet Discovery</strong>: Agents can register their services across the global internet and be found by other agents through standardized discovery protocols.</li>
+        <li><strong>Local Network Discovery</strong>: Agents can automatically broadcast and discover each other within local area networks, supporting agent collaboration within enterprises and private networks.</li>
+      </ul>
+      
+      <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent discovery standards.</p>
       
     </section>
 
     <section id="security-considerations">
       <h2>Security Considerations</h2>
       
-      <section>
-        <p>The core objective of the Security Considerations module is to ensure the security of agents during interactions, establish multi-layered security protection systems, and maximize defense against various security threats and malicious attacks:</p>
-        
-        <ul>
-          <li><strong>Authentication and Authorization</strong>: Ensure that agents participating in interactions have authentic and trustworthy identities, establish fine-grained permission control mechanisms, and prevent identity forgery and unauthorized access.</li>
-          <li><strong>Communication Encryption</strong>: Apply end-to-end encryption to all communication data between agents, ensuring that data transmission is not subject to eavesdropping, tampering, or replay attacks.</li>
-          <li><strong>Data Integrity Protection</strong>: Use technologies such as digital signatures and message authentication codes to ensure the integrity and authenticity of interaction data, preventing malicious data modification.</li>
-          <li><strong>Malicious Behavior Detection</strong>: Establish agent behavior monitoring and anomaly detection mechanisms to timely discover and prevent malicious agent attack behaviors.</li>
-          <li><strong>Security Auditing</strong>: Record and monitor all interaction activities between agents, providing comprehensive security audit logs to support post-incident analysis and forensics.</li>
-        </ul>
-        
-        <p>Therefore, agent security protocols must adopt defense-in-depth strategies, establishing corresponding security protection measures at the network layer, application layer, and data layer.</p>
-        
-        <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent security standards.</p>
-      </section>
+      <p>The core objective of the Security Considerations module is to ensure the security of agents during interactions, establish multi-layered security protection systems, and maximize defense against various security threats and malicious attacks:</p>
+      
+      <ul>
+        <li><strong>Authentication and Authorization</strong>: Ensure that agents participating in interactions have authentic and trustworthy identities, establish fine-grained permission control mechanisms, and prevent identity forgery and unauthorized access.</li>
+        <li><strong>Communication Encryption</strong>: Apply end-to-end encryption to all communication data between agents, ensuring that data transmission is not subject to eavesdropping, tampering, or replay attacks.</li>
+        <li><strong>Data Integrity Protection</strong>: Use technologies such as digital signatures and message authentication codes to ensure the integrity and authenticity of interaction data, preventing malicious data modification.</li>
+        <li><strong>Malicious Behavior Detection</strong>: Establish agent behavior monitoring and anomaly detection mechanisms to timely discover and prevent malicious agent attack behaviors.</li>
+        <li><strong>Security Auditing</strong>: Record and monitor all interaction activities between agents, providing comprehensive security audit logs to support post-incident analysis and forensics.</li>
+      </ul>
+      
+      <p>Therefore, agent security protocols must adopt defense-in-depth strategies, establishing corresponding security protection measures at the network layer, application layer, and data layer.</p>
+      
+      <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent security standards.</p>
       
     </section>
 
     <section id="privacy-considerations">
       <h2>Privacy Considerations</h2>
       
-      <section>
-        <p>The core objective of the Privacy Considerations module is to maximize the protection of personal privacy during agent interactions, ensuring that users' sensitive information is not improperly transmitted or leaked between agents, and establishing privacy-first interaction mechanisms:</p>
-        
-        <ul>
-          <li><strong>Data Minimization Principle</strong>: Agents only transmit the minimum information necessary to complete tasks during interactions, avoiding unnecessary personal data sharing.</li>
-          <li><strong>Data Desensitization and Anonymization</strong>: When transmitting information between agents, personal privacy data undergoes desensitization, anonymization, or pseudonymization processing to protect users' real identities.</li>
-          <li><strong>User Authorization Control</strong>: Establish clear user authorization mechanisms, ensuring that any cross-agent transmission of personal data requires explicit user consent and authorization.</li>
-        </ul>
-        
-        <p>Therefore, agent privacy protocols must make privacy protection a fundamental design principle, ensuring that technological progress does not come at the expense of user privacy.</p>
-        
-        <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent privacy protection standards.</p>
-      </section>
+      <p>The core objective of the Privacy Considerations module is to maximize the protection of personal privacy during agent interactions, ensuring that users' sensitive information is not improperly transmitted or leaked between agents, and establishing privacy-first interaction mechanisms:</p>
+      
+      <ul>
+        <li><strong>Data Minimization Principle</strong>: Agents only transmit the minimum information necessary to complete tasks during interactions, avoiding unnecessary personal data sharing.</li>
+        <li><strong>Data Desensitization and Anonymization</strong>: When transmitting information between agents, personal privacy data undergoes desensitization, anonymization, or pseudonymization processing to protect users' real identities.</li>
+        <li><strong>User Authorization Control</strong>: Establish clear user authorization mechanisms, ensuring that any cross-agent transmission of personal data requires explicit user consent and authorization.</li>
+      </ul>
+      
+      <p>Therefore, agent privacy protocols must make privacy protection a fundamental design principle, ensuring that technological progress does not come at the expense of user privacy.</p>
+      
+      <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent privacy protection standards.</p>
       
     </section>
-    
     
     <section id="references">
       <h2>References</h2>
       <ol>
-        
+        <li id="RFC2119">[RFC2119] Key words for use in RFCs to Indicate Requirement Levels. S. Bradner. IETF. March 1997. Best Current Practice. URL: <a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a></li>
+        <li id="RFC8174">[RFC8174] Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words. B. Leiba. IETF. May 2017. Best Current Practice. URL: <a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a></li>
+        <li id="aac-registry">[aac-registry] W3C Alternative and Augmented Communication (AAC) Symbol Registry. Michael Cooper; Ruoxi Ran; Janina Sajka; Matthew Atkinson; Russell Galvin et al. W3C. DRY. URL: <a href="https://www.w3.org/TR/aac-registry/">https://www.w3.org/TR/aac-registry/</a></li>
       </ol>
     </section>
 
