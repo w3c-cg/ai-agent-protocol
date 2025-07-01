@@ -208,7 +208,7 @@
     <h3>Model Context Protocol (MCP)</h3>
     
     <ul>
-      <li><strong>Description</strong>: MCP is a widely adopted open specification initiated by Anthropic and now open-sourced, aimed at specifying how applications provide context to large language models (LLMs). It is metaphorically described as the "USB-C port for AI applications," targeting the M×N integration challenge faced when AI models connect with external data sources, tools, and systems (such as cloud platforms, enterprise databases, local files). By providing a unified interface, MCP simplifies interactions between AI models and the external world, reducing the need to build custom connectors for each new data source or tool.</li>
+      <li><strong>Description</strong>: MCP is a widely adopted open specification initiated by Anthropic and now open-sourced, aimed at specifying how applications provide context to large language models (LLMs). It is metaphorically described as the "USB-C port for AI applications," targeting the M×N integration challenge faced when AI models connect with external data sources, tools, and systems (such as cloud platforms, enterprise databases, local files). By providing a unified interface, MCP simplifies interactions between AI models and the external world, reducing the need to build custom connectors for each new data source or tool [[ref11]].</li>
       
       <li><strong>Key Features/Mechanisms</strong>: MCP adopts a client-server architecture where AI applications (such as chat assistants, AI-driven IDEs) act as MCP clients, connecting to one or more MCP servers that expose capabilities or data . Its core interaction primitives include: Tools (executable functions that can be dynamically invoked, such as API calls), Resources (structured static data streams for AI reference), and Prompts (reusable conversation workflows or templates). The protocol layer handles message framing, request/response mapping, and notification delivery, supporting various transport protocols such as Stdio for local processes and HTTP+SSE for network services.</li>
       
@@ -222,7 +222,7 @@
     <h3>Agent-to-Agent Protocol (A2A) </h3>
     
     <ul>
-      <li><strong>Description</strong>: A2A is an open protocol initiated by Google and jointly promoted with over 50 industry partners, designed to enable independent AI agents built on different frameworks by different vendors to communicate, collaborate, and coordinate actions securely and seamlessly. It aims to address interoperability issues in heterogeneous agent ecosystems, allowing agents to work together without exposing their internal states, memories, or tools.</li>
+      <li><strong>Description</strong>: A2A is an open protocol initiated by Google and jointly promoted with over 50 industry partners, designed to enable independent AI agents built on different frameworks by different vendors to communicate, collaborate, and coordinate actions securely and seamlessly. It aims to address interoperability issues in heterogeneous agent ecosystems, allowing agents to work together without exposing their internal states, memories, or tools [[ref8]] [[ref9]].</li>
       
       <li><strong>Key Features/Mechanisms</strong>: A2A's core architecture revolves around client agents and remote agents. Agents publish their identities, capabilities, skills, service endpoints, and authentication requirements through "Agent Cards" (JSON metadata documents), enabling capability discovery. The protocol supports task management lifecycle, allowing creation, sending, and tracking of task status, and can handle long-running tasks that might take hours or even days. A2A supports multiple interaction modalities, including text, files, structured JSON data, as well as audio and video streams.</li>
       
@@ -236,7 +236,7 @@
     <h3>Agent Network Protocol (ANP)</h3>
     
     <ul>
-      <li><strong>Description</strong>: ANP is an open-source protocol with the vision of becoming "the HTTP of the Agentic Web era," designed to build an open, secure, and efficient collaborative network for billions of agents. It aims to address the inadequacies of current internet infrastructure in meeting the specific needs of agent networks. ANP is developed and maintained by the open-source community, which is committed to an open, neutral stance, and the community pledges never to commercialize.</li>
+      <li><strong>Description</strong>: ANP is an open-source protocol with the vision of becoming "the HTTP of the Agentic Web era," designed to build an open, secure, and efficient collaborative network for billions of agents. It aims to address the inadequacies of current internet infrastructure in meeting the specific needs of agent networks. ANP is developed and maintained by the open-source community, which is committed to an open, neutral stance, and the community pledges never to commercialize [[ref6]] [[ref7]].</li>
       
       <li><strong>Key Features/Mechanisms</strong>: ANP primarily addresses the connection and collaboration of agents on the internet, adopting a three-layer architecture:
         <ol>
@@ -257,7 +257,7 @@
     <h3>Agent Connect Protocol (ACP) </h3>
     
     <ul>
-      <li><strong>Description</strong>: ACP is an open-source protocol led by Cisco and developed in collaboration with partners such as LangChain and Galileo as part of the AGNTCY initiative, designed to provide a communication layer for autonomous agents to collaborate and share resources in distributed systems.</li>
+      <li><strong>Description</strong>: ACP is an open-source protocol led by Cisco and developed in collaboration with partners such as LangChain and Galileo as part of the AGNTCY initiative, designed to provide a communication layer for autonomous agents to collaborate and share resources in distributed systems [[ref12]].</li>
       
       <li><strong>Key Features/Mechanisms</strong>: ACP adopts RESTful APIs as the standard interface, defining how agents interact, including retrieving workflows that agents can execute, creating and managing context threads, and running agents. It supports stateful communication threads, allowing agents to negotiate and reason together during tasks, and implements loosely coupled interactions through message passing. Agent discovery is achieved through the Agent Directory and OASF (Open Agentic Schema Framework) documents, which are standardized JSON files describing agent capabilities, invocation methods, input/output patterns, and more. ACP supports asynchronous-first interactions, multi-part messages, and observability features.</li>
       
@@ -272,7 +272,7 @@
     <h3>Agent Communication Protocol (ACP) </h3>
     
     <ul>
-      <li><strong>Description</strong>: Agent Communication Protocol (ACP) is an open-source standard contributed by IBM to the Linux Foundation, designed to provide a shared language for heterogeneous AI agents to enable connection, collaboration, and complex task execution. The protocol's primary goal is to eliminate vendor lock-in and promote the development of agent ecosystems through an open governance model.</li>
+      <li><strong>Description</strong>: Agent Communication Protocol (ACP) is an open-source standard contributed by IBM to the Linux Foundation, designed to provide a shared language for heterogeneous AI agents to enable connection, collaboration, and complex task execution. The protocol's primary goal is to eliminate vendor lock-in and promote the development of agent ecosystems through an open governance model [[ref13]].</li>
       
       <li><strong>Key Features/Mechanisms</strong>: ACP defines a standardized RESTful API that supports synchronous, asynchronous, and streaming interactions, adopting a peer-to-peer interaction design. Its core features include:
         <ul>
@@ -434,11 +434,13 @@
       <li id="ref4"><a href="https://arxiv.org/html/2504.21030v1" target="_blank">LLM Agents Architecture: A Survey</a></li>
       <li id="ref5"><a href="https://outshift.cisco.com/blog/building-multi-agent-marketing-campaign-agntcy" target="_blank">Building Multi-Agent Marketing Campaign with AGNTCY</a></li>
       <li id="ref6"><a href="https://github.com/agent-network-protocol/AgentNetworkProtocol/blob/main/01-agentnetworkprotocol-technical-white-paper.md" target="_blank">Agent Network Protocol Technical White Paper</a></li>
-      <li id="ref7"><a href="https://arxiv.org/pdf/2505.02279v1" target="_blank">Towards a New Internet: Agent Network Protocol for Agentic Web</a></li>
+      <li id="ref7"><a href="https://github.com/agent-network-protocol/AgentNetworkProtocol" target="_blank">Github: AgentNetworkProtocol</a></li>
       <li id="ref8"><a href="https://google.github.io/A2A/specification/" target="_blank">Agent-to-Agent (A2A) Protocol Specification</a></li>
       <li id="ref9"><a href="https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/" target="_blank">A2A: A new era of agent interoperability</a></li>
       <li id="ref10"><a href="https://outshift.cisco.com/blog/mcp-acp-decoding-language-of-models-and-agents" target="_blank">MCP & ACP: Decoding the Language of Models and Agents</a></li>
       <li id="ref11"><a href="https://modelcontextprotocol.io/specification/2025-03-26" target="_blank">Model Context Protocol (MCP)</a></li>
+      <li id="ref12"><a href="https://github.com/agntcy/acp-spec" target="_blank">Agent Connect Protocol (ACP) Specification - AGNTCY</a></li>
+      <li id="ref13"><a href="https://agentcommunicationprotocol.dev/introduction/welcome" target="_blank">Agent Communication Protocol (ACP) - Introduction</a></li>
     </ol>
   </section>
 
