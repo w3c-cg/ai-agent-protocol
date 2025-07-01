@@ -78,7 +78,40 @@
       </ul>
       
       <p>Therefore, agent identity protocols must possess excellent interoperability.</p>
+    
+      <p>The following example demonstrates a DID document using the did:wba method:</p>
       
+      <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-left: 4px solid #fdcb6e; padding: 15px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #856404;">EXAMPLE</h4>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>{
+"@context": [
+  "https://www.w3.org/ns/did/v1",
+  "https://w3id.org/security/suites/ed25519-2020/v1"
+],
+"id": "did:wba:agent.example.com:alice",
+"verificationMethod": [
+  {
+    "id": "did:wba:agent.example.com:alice#key-1",
+    "type": "Ed25519VerificationKey2020",
+    "controller": "did:wba:agent.example.com:alice",
+    "publicKeyMultibase": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+  }
+],
+"authentication": [
+  "did:wba:agent.example.com:alice#key-1"
+],
+"service": [
+  {
+    "id": "did:wba:agent.example.com:alice#agent-desc",
+    "type": "AgentDescription", 
+    "serviceEndpoint": "https://agent.example.com/alice/description.json"
+  }
+]
+}</code></pre>
+      </div>
+      
+      <p>This DID resolves to: <code>https://agent.example.com/alice/did.json</code></p>
+
       <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent identity standards.</p>
       
     </section>
@@ -95,6 +128,30 @@
       </ul>
       
       <p>Therefore, agent description protocols must possess good extensibility and semantic clarity, ensuring that different agents can accurately understand each other's capability boundaries.</p>
+      
+      <p>The following example demonstrates an agent description document:</p>
+      
+      <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-left: 4px solid #fdcb6e; padding: 15px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #856404;">EXAMPLE</h4>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "ad": "https://example.com/ad#"
+  },
+  "@type": "ad:AgentDescription",
+  "name": "SmartAssistant",
+  "did": "did:wba:agent.example.com:alice",
+  "description": "An intelligent agent providing natural language processing capabilities",
+  "version": "1.0.0",
+  "interfaces": [
+    {
+      "@type": "ad:NaturalLanguageInterface",
+      "protocol": "YAML",
+      "url": "https://agent.example.com/alice/nl-interface.yaml"
+    }
+  ]
+}</code></pre>
+      </div>
       
       <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent description standards.</p>
       
