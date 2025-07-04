@@ -1,6 +1,6 @@
-# AI Agent Protocol Specification
+# AI Agent Protocol CG
 
-Welcome to the AI Agent Protocol specification project! We welcome your contributions to make the Web more exciting together!
+Welcome to the AI Agent Protocol CG! We welcome your contributions to make the Web more exciting together!
 
 ## Meetings and Communication
 
@@ -33,12 +33,12 @@ We have established a dedicated channel in the W3C Community Slack.
 
 **How to Join:**
 
-- **Join Slack Channel Directly**: https://w3ccommunity.slack.com/archives/C091V1SCF8W
+- If you have joined the W3C Community Slack, please **join Slack Channel Directly**: https://w3ccommunity.slack.com/archives/C091V1SCF8W
 
 Or:
 
 1. **Request Invitation**: https://www.w3.org/slack-w3ccommunity-invite
-2. After joining, search for and join the `#ai-agent-protocol` channel to connect and communicate with other contributors
+2. After joining, search for and join the **#ai-agent-protocol** channel to connect and communicate with other contributors
 
 ---
 
