@@ -64,7 +64,50 @@
       
       <section id="concepts">
         <h3>Concepts of AI Agent Protocols</h3>
-        <p class="ednote">TODO: This section needs further development and refinement.</p>
+        
+        <p>The AI Agent Protocol defines a standardized framework for intelligent agents to interact, collaborate, and provide services across different platforms and organizations. The following concepts are fundamental to understanding agent interactions:</p>
+        
+        <section id="personal-agent">
+          <h4>Personal Agent</h4>
+          <p><strong>Personal Agent</strong> refers to intelligent agents that directly serve individual users. These agents operate under user authorization, access user data, and interact with other agents on behalf of their users. Personal agents act as digital representatives for individuals, managing their preferences, schedules, communications, and various personal tasks while maintaining user privacy and control.</p>
+          
+          <p>Key characteristics of Personal Agents include:</p>
+          <ul>
+            <li>Direct user interaction and service provision</li>
+            <li>User-authorized access to personal data</li>
+            <li>Representation of user interests in agent-to-agent interactions</li>
+            <li>Privacy-preserving data handling</li>
+            <li>Personalized service delivery based on user preferences</li>
+          </ul>
+        </section>
+        
+        <section id="service-agent">
+          <h4>Service Agent</h4>
+          <p><strong>Service Agent</strong> refers to intelligent agents that provide services to other agents rather than directly serving individual users. These agents operate on the internet and offer specialized capabilities that can be consumed by Personal Agents or other Service Agents through standardized protocols. For example, a hotel's intelligent agent provides booking and accommodation services to Personal Agents through the AI Agent Protocol.</p>
+          
+          <p>Key characteristics of Service Agents include:</p>
+          <ul>
+            <li>Agent-to-agent service provision</li>
+            <li>Specialized domain expertise and capabilities</li>
+            <li>Standardized service interfaces and protocols</li>
+            <li>Scalable service delivery to multiple consuming agents</li>
+            <li>Business logic and domain-specific processing</li>
+          </ul>
+        </section>
+        
+        <section id="search-agent">
+          <h4>Search Agent</h4>
+          <p><strong>Search Agent</strong> refers to intelligent agents that facilitate agent discovery and connection. These agents maintain directories of available agents and their capabilities, enabling agents to find and connect with each other. Search Agents act as intermediaries in the agent ecosystem, providing discovery, matching, and connection services that enable the formation of dynamic agent networks.</p>
+          
+          <p>Key characteristics of Search Agents include:</p>
+          <ul>
+            <li>Agent discovery and directory services</li>
+            <li>Capability matching and recommendation</li>
+            <li>Network topology and connection facilitation</li>
+            <li>Agent metadata and reputation management</li>
+            <li>Dynamic agent network formation support</li>
+          </ul>
+        </section>
       </section>
       
     </section>
@@ -77,12 +120,64 @@
         <p class="ednote">TODO: This section needs further development and refinement.</p>
       </section>
 
+      <section id="hotel-booking">
+        <h3>Hotel Booking</h3>
+        
+        <p><strong>Scenario Overview:</strong> Dixon is planning a vacation to Paris and needs to book a hotel that matches his preferences. He decides to let his Personal Agent handle this task, demonstrating the complete workflow of modern agent collaboration.</p>
+        
+        <p><strong>Step 1 - Requirements Analysis and Search:</strong> Dixon's Personal Agent, based on previously authorized access to personal data (including hotel preferences: 4-star or above, close to city center, with gym; vacation dates: March 15-22; budget range: 200-400 euros per night), uses the agent protocol to send a structured search request to the Search Agent. The Search Agent performs matching within its maintained global hotel agent network and quickly returns information for 100 qualifying hotel Service Agents.</p>
+        
+        <p><strong>Step 2 - Information Collection and Filtering:</strong> The Personal Agent uses Dixon's identity credentials to concurrently access these hotel Service Agents, requesting detailed information (real-time room rates, available room types, specific locations, facilities and services, user reviews, etc.). Each hotel Service Agent, recognizing potential customer access, proactively provides detailed service information and promotional offers. After collecting all information, the Personal Agent applies Dixon's personal preference algorithm to filter 8 best-matching hotel options from the 100 choices, ranking them by match score before pushing them to Dixon.</p>
+        
+        <p><strong>Step 3 - Booking and Payment:</strong> After reviewing the Personal Agent's recommended options, Dixon selects the second-ranked boutique hotel (because the top-ranked hotel had noise issues mentioned in reviews). The Personal Agent immediately establishes a booking session with that hotel Service Agent, completing room reservation and booking confirmation. However, due to security policies, the Personal Agent lacks payment authorization. After Dixon receives the successful booking notification, he completes payment through a secure payment interface. Once payment is completed, the Personal Agent automatically notifies the hotel Service Agent of the payment status and saves the complete booking information (confirmation number, check-in details, hotel contact information) to Dixon's personal travel profile.</p>
+        
+        <p><strong>Collaboration Value:</strong> Throughout this process, the Personal Agent serves as Dixon's digital representative, the Search Agent provides agent discovery services, and the hotel Service Agent provides professional services. All three achieve seamless collaboration through standardized agent protocols, significantly improving booking efficiency and user experience.</p>
+        
+        <p><strong>Requirements:</strong> <a href="#agent-identity-authentication">Agent Identity Authentication</a>, <a href="#agent-discovery">Agent Discovery</a>, <a href="#agent-description">Agent Description</a>, <a href="#agent-interaction">Agent Information Interaction</a>, <a href="#agent-transactions">Agent Transactions</a>, <a href="#privacy-protection">Privacy Protection</a>, <a href="#identity-interoperability">Identity Interoperability</a></p>
+        
+      
+      </section>
+
       
     </section>
 
     <section id="requirements">
       <h2>Requirements</h2>
-      <p class="ednote">TODO: This section needs further development and refinement.</p>
+      
+      <section id="agent-identity-authentication">
+        <h3>Agent Identity Authentication</h3>
+        <p>Agents must be able to mutually identify each other's identity, origin, and trustworthiness, establishing trusted communication connections through standardized authentication mechanisms. Agent identity information must maintain consistency and integrity across cross-platform interactions.</p>
+      </section>
+      
+      <section id="agent-discovery">
+        <h3>Agent Discovery</h3>
+        <p>Agents must be easily discoverable and accessible by other agents in different network environments, supporting both global internet discovery and local network discovery mechanisms.</p>
+      </section>
+      
+      <section id="agent-description">
+        <h3>Agent Description</h3>
+        <p>Agents must be able to standardize descriptions of their basic information, service capabilities, and interaction interfaces, including metadata such as name, version, and service scope. Agents must clearly declare their functions, service types, processing capabilities, and areas of expertise.</p>
+      </section>
+      
+      <section id="agent-interaction">
+        <h3>Agent Information Interaction</h3>
+        <p>Communication between agents must support end-to-end encryption to ensure data transmission is not subject to eavesdropping, tampering, or replay attacks. Interaction protocols must have good scalability and version compatibility.</p>
+      </section>
+      
+      <section id="agent-transactions">
+        <h3>Agent Transactions</h3>
+        <p>Agent transactions must use technologies such as digital signatures and message authentication codes to ensure data integrity and authenticity. Transaction processes must support traceability and auditability.</p>
+      </section>
+      
+      <section id="privacy-protection">
+        <h3>Privacy Protection</h3>
+        <p>Agent interactions must only transmit the minimum information necessary to complete tasks, avoiding unnecessary personal data sharing. Personal privacy data must undergo desensitization, anonymization, or pseudonymization processing. Any cross-agent transmission of personal data requires explicit user consent and authorization.</p>
+      </section>
+      
+      <section id="identity-interoperability">
+        <h3>Identity Interoperability</h3>
+        <p>Agent identity protocols must have excellent interoperability and not depend on specific vendors or technology platforms.</p>
+      </section>
     </section>
 
     <section id="features-and-benefits">
