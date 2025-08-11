@@ -132,6 +132,11 @@
         <p>When a client makes a request to a service on different platforms, the client can use the domain name combined with TLS to authenticate the service. The service then verifies the identity of the client based on the verification methods in the client's DID document.</p>
         <p>The client can include the DID and signature in the HTTP header during the first HTTP request. Without increasing the number of interactions, the service can quickly verify the identity of the client. After the initial verification is successful, the service can return a access token to the client. The client can then carry the access token in subsequent requests, and the service does not need to verify the client's identity each time, but only needs to verify the access token.</p>
 
+        <figure style="margin: 16px 0;">
+          <img src="images/did-wba-flow.png" alt="did:wba cross-platform authentication flow" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
+          <figcaption style="text-align: center; color: #555;">Cross-Platform Identity Authentication Flow (did:wba)</figcaption>
+        </figure>
+
         <h5>3.1 Initial Request</h5>
         <p>When the client first makes an HTTP request to the service, it needs to authenticate according to the following method.</p>
 
