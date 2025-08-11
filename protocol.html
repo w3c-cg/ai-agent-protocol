@@ -32,6 +32,36 @@
         border: 1px solid black; 
       }
     </style>
+    <script>
+      // Flatten ToC so that sections like Introduction/Agent Identity appear as top-level items
+      (async () => {
+        try {
+          await document.respecReady; // wait until ReSpec finishes rendering
+          const toc = document.getElementById("toc") || document.querySelector("nav#toc");
+          if (!toc) return;
+          const topUl = toc.querySelector("ul");
+          if (!topUl) return;
+          const firstLi = topUl.firstElementChild;
+          if (!firstLi) return;
+          const titleEl = document.querySelector("h1");
+          const titleText = titleEl ? titleEl.textContent.trim() : "";
+          const firstTextEl = firstLi.querySelector(":scope > a, :scope > span");
+          const firstText = firstTextEl ? firstTextEl.textContent.trim() : "";
+          const childUl = firstLi.querySelector(":scope > ul");
+          // If the first ToC item equals the doc title and has children, lift children to top-level
+          if (childUl && titleText && firstText && firstText === titleText) {
+            const children = Array.from(childUl.children);
+            for (const li of children) {
+              topUl.insertBefore(li, firstLi);
+            }
+            firstLi.remove();
+          }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn("ToC flattening skipped:", err);
+        }
+      })();
+    </script>
   </head>
   <body>
 
