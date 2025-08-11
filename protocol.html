@@ -108,6 +108,156 @@
       </ul>
       
       <p>Therefore, agent identity protocols must possess excellent interoperability.</p>
+      
+      <section id="why-did-for-agents">
+        <h3>Why DID fits Agent Identity</h3>
+        <p>Decentralized Identifiers (DIDs) provide a standards-based, verifiable identity primitive for agents to identify, authenticate, and authorize each other across heterogeneous ecosystems.</p>
+        <ul>
+          <li><strong>Interoperability</strong>: The W3C DID Core data model and resolution interfaces enable cross-vendor, cross-platform interoperability. Any conforming DID method can be resolved into a DID Document that encodes verification methods and service endpoints in a uniform structure, allowing agents to communicate with minimal assumptions about the counterparty's stack.</li>
+          <li><strong>Decentralization</strong>: DIDs are created and controlled by their subjects and anchored by cryptographic keys, without relying on a single central registry. This reduces vendor lock-in, avoids single points of failure, and supports peer-to-peer trust establishment.</li>
+        </ul>
+      </section>
+      
+      <section id="why-web-based-did">
+        <h3>Why a Web-based DID method (did:wba)</h3>
+        <ul>
+          <li><strong>High security</strong>: Reuses the mature Web PKI and HTTPS. DID Documents are hosted under authenticated Web origins, benefiting from TLS, DNS ownership validation, and existing operational security practices — matching the security level of today’s websites.</li>
+          <li><strong>Simplicity of operations</strong>: The domain owner manages identifier lifecycle within its namespace (create, update, revoke). Peers fetch DID Documents directly via HTTP(S) (for example, <code>did:wba:agent.example.com:alice</code> resolves to <code>https://agent.example.com/alice/did.json</code>), enabling straightforward discovery without bespoke networks.</li>
+          <li><strong>Leverages existing Web infrastructure and scales</strong>: Builds on ubiquitous DNS, HTTP, CDNs, caching, and monitoring stacks, enabling horizontal scalability to billions of identifiers and low operational overhead.</li>
+        </ul>
+        <p class="note">Note: The did:wba method follows a Web-anchored resolution model aligned with existing enterprise and public Internet deployments.</p>
+        <p><strong>Method reference</strong>: <a href="https://github.com/agent-network-protocol/AgentNetworkProtocol/blob/main/03-did-wba-method-design-specification.md">did:wba method design specification</a></p>
+
+        <h4>3. Cross-Platform Identity Authentication Based on did:wba Method and HTTP Protocol</h4>
+        <p>When a client makes a request to a service on different platforms, the client can use the domain name combined with TLS to authenticate the service. The service then verifies the identity of the client based on the verification methods in the client's DID document.</p>
+        <p>The client can include the DID and signature in the HTTP header during the first HTTP request. Without increasing the number of interactions, the service can quickly verify the identity of the client. After the initial verification is successful, the service can return a access token to the client. The client can then carry the access token in subsequent requests, and the service does not need to verify the client's identity each time, but only needs to verify the access token.</p>
+
+        <h5>3.1 Initial Request</h5>
+        <p>When the client first makes an HTTP request to the service, it needs to authenticate according to the following method.</p>
+
+        <h6>3.1.1 Request Header Format</h6>
+        <p>The client sends the following information through the Authorization header field to the service:</p>
+        <ul>
+          <li><strong>DIDWba</strong>: Indicates the use of the did:wba protocol</li>
+          <li><strong>did</strong>: The did identifier of the client, used for identity verification.</li>
+          <li><strong>nonce</strong>: A randomly generated string used to prevent replay attacks. It must be unique for each request. We recommend using a 16-byte random string.</li>
+          <li><strong>timestamp</strong>: The time when the request is initiated, usually in UTC format using ISO 8601, accurate to seconds.</li>
+          <li><strong>verification_method</strong>: Identifies the verification method used in the signature, which is the DID fragment of the verification method in the DID document. For example, for the verification method <code>did:wba:example.com%3A8800:user:alice#key-1</code>, the verification method's DID fragment is <code>key-1</code>.</li>
+          <li><strong>signature</strong>: Sign the nonce, timestamp, service domain, and client DID. For ECDSA signatures, use the R|S format. It includes the following fields:
+            <ul>
+              <li>nonce</li>
+              <li>timestamp</li>
+              <li>service (the domain name of the service)</li>
+              <li>did (the DID of the client)</li>
+            </ul>
+          </li>
+        </ul>
+        <p>Client request example:</p>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>Authorization: DIDWba did="did:wba:example.com%3A8800:user:alice", nonce="abc123", timestamp="2024-12-05T12:34:56Z", verification_method="key-1", signature="base64url(signature_of_nonce_timestamp_service_did)"</code></pre>
+
+        <h6>3.1.2 Signature Generation Process</h6>
+        <p>The client generates a string containing the following information:</p>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>{
+  "nonce": "abc123",
+  "timestamp": "2024-12-05T12:34:56Z",
+  "service": "example.com",
+  "did": "did:wba:example.com:user:alice"
+}</code></pre>
+        <ol>
+          <li>Use JCS(JSON Canonicalization Scheme) to normalize the JSON string, generating a normalized string.</li>
+          <li>Use the SHA-256 algorithm to hash the normalized string, generating a hash value.</li>
+          <li>Use the client's private key to sign the hash value, generating a signature value signature, and encode it in URL-safe Base64.</li>
+          <li>Construct the Authorization header in the above format and send it to the service.</li>
+        </ol>
+
+        <h5>3.2 Service Verification</h5>
+        <h6>3.2.1 Verify Request Header</h6>
+        <p>After receiving the client's request, the service performs the following verification:</p>
+        <ul>
+          <li><strong>Verify Timestamp</strong>: Check if the timestamp in the request is within a reasonable time range. The recommended time range is 1 minute. If the timestamp is out of range, the request is considered expired, and the service returns 401 Unauthorized with a authentication challenge.</li>
+          <li><strong>Verify Nonce</strong>: Check if the nonce in the request has been used or exists. If the nonce has been used or exists, it is considered a replay attack, and the service returns 401 Unauthorized with a authentication challenge.</li>
+          <li><strong>Verify DID Permissions</strong>: Verify if the DID in the request has the permission to access the resources of the service. If not, the service returns 403 Forbidden.</li>
+          <li><strong>Verify Signature</strong>:
+            <ol>
+              <li>Read the DID document based on the client's DID.</li>
+              <li>Find the corresponding verification method in the DID document based on the <code>verification_method</code> in the request.</li>
+              <li>Use the public key of the verification method to verify the signature in the request.</li>
+            </ol>
+            Verification Result: If the signature verification is successful, the request passes verification; otherwise, the service returns 401 Unauthorized with a authentication challenge.
+          </li>
+        </ul>
+
+        <h6>3.2.2 Signature Verification Process</h6>
+        <ol>
+          <li><strong>Extract Information</strong>: Extract <code>nonce</code>, <code>timestamp</code>, <code>service</code>, <code>did</code>, and <code>verification_method</code> from the Authorization header.</li>
+          <li><strong>Build Verification String</strong>: Construct a JSON string identical to the one constructed by the client:</li>
+        </ol>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>{
+  "nonce": "abc123",
+  "timestamp": "2024-12-05T12:34:56Z",
+  "service": "example.com",
+  "did": "did:wba:example.com:user:alice"
+}</code></pre>
+        <ol start="3">
+          <li><strong>Normalize String</strong>: Use JCS(JSON Canonicalization Scheme) to normalize the JSON string, generating a normalized string.</li>
+          <li><strong>Generate Hash Value</strong>: Use the SHA-256 algorithm to hash the normalized string, generating a hash value.</li>
+          <li><strong>Get Public Key</strong>: Obtain the corresponding public key from the DID document based on <code>did</code> and <code>verification_method</code>.</li>
+          <li><strong>Verify Signature</strong>: Use the obtained public key to verify the signature, ensuring that it is generated by the corresponding private key.</li>
+        </ol>
+
+        <h6>3.2.3 Authentication Success Return Access Token</h6>
+        <p>After the service successfully verifies the client's identity, it can return a access token in the response. The access token is recommended to be in JWT (JSON Web Token) format. The client can then carry the access token in subsequent requests, and the service does not need to verify the client's identity each time, but only needs to verify the access token.</p>
+        <p>The following generation process is not required by the specification, but is provided for reference. Implementers can define and implement it as needed.</p>
+        <p>JWT generation method reference RFC7519.</p>
+        <p><strong>Generate Access Token</strong></p>
+        <p>Assuming the service uses JWT (JSON Web Token) as the access token format, JWT typically contains the following fields:</p>
+        <ul>
+          <li><strong>header</strong>: Specifies the signing algorithm</li>
+          <li><strong>payload</strong>: Stores user-related information</li>
+          <li><strong>signature</strong>: Signs the header and payload to ensure their integrity</li>
+        </ul>
+        <p>The payload can include the following fields (other fields can be added as needed):</p>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>{
+  "sub": "did:wba:example.com:user:alice",  // User DID 
+  "iat": "2024-12-05T12:34:56Z",            // Issued time
+  "exp": "2024-12-06T12:34:56Z",            // Expiration time
+}</code></pre>
+        <p>Implementers can add other security measures in the payload, such as using scope or binding IP addresses.</p>
+        <p><strong>Return Access Token</strong> The generated header, payload, and signature are concatenated and URL-safe Base64 encoded to form the final access token. Then, the access token is returned through the Authorization header:</p>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>Authorization: Bearer &lt;access_token&gt;</code></pre>
+        <p><strong>Client Send Access Token</strong> The client sends the access token through the Authorization header field to the service:</p>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>Authorization: Bearer &lt;access_token&gt;</code></pre>
+        <p><strong>Service Verify Access Token</strong> After receiving the client's request, the service extracts the access token from the Authorization header and verifies it, including verifying the signature, verifying the expiration time, and verifying the fields in the payload. The verification method is based on RFC7519.</p>
+
+        <h6>3.2.4 Error Handling</h6>
+        <p><strong>3.2.4.1 401 Response</strong></p>
+        <p>When the server fails to verify the signature and requires the client to reinitiate the request, it should return a 401 response.</p>
+        <p>Additionally, if the server doesn't support recording client request Nonces, or requires clients to always use server-generated Nonces for signing, it may return a 401 response with an authentication challenge containing a Nonce for each initial client request. However, this increases the number of client requests, and implementers can choose whether to use this approach.</p>
+        <p>Error information is returned through the WWW-Authenticate header field, for example:</p>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>WWW-Authenticate: Bearer error="invalid_nonce", error_description="Nonce has already been used. Please provide a new nonce.", nonce="xyz987"</code></pre>
+        <p>Contains the following fields:</p>
+        <ul>
+          <li><strong>error</strong>: Required field, error type, containing the following string values:
+            <ul>
+              <li><code>invalid_request</code>: Request format error, missing required fields, or contains unsupported parameters.</li>
+              <li><code>invalid_nonce</code>: Nonce has already been used.</li>
+              <li><code>invalid_timestamp</code>: Timestamp is out of range.</li>
+              <li><code>invalid_did</code>: DID format error, or unable to find corresponding DID document.</li>
+              <li><code>invalid_signature</code>: Signature verification failed.</li>
+              <li><code>invalid_verification_method</code>: Unable to find corresponding public key based on verification method.</li>
+              <li><code>invalid_access_token</code>: Access token verification failed.</li>
+              <li><code>forbidden_did</code>: DID lacks permission to access server resources.</li>
+            </ul>
+          </li>
+          <li><strong>error_description</strong>: Optional field, error description.</li>
+          <li><strong>nonce</strong>: Optional field, server-generated random string. If present, the client must use this Nonce to regenerate the signature and reinitiate the request.</li>
+        </ul>
+        <p>When the client receives a 401 response, if the response contains a Nonce, the client must use the server's Nonce to regenerate the signature and reinitiate the request. If the response doesn't contain a Nonce, the client must use a client-generated Nonce to regenerate the signature and reinitiate the request.</p>
+        <p>It's important to note that both client and server implementations should limit the number of retry attempts to prevent infinite loops.</p>
+
+        <p><strong>3.2.4.2 403 Response</strong></p>
+        <p>When server authentication succeeds but the DID lacks permission to access server resources, a 403 response should be returned.</p>
+      </section>
     
       <p>The following example demonstrates a DID document using the did:wba method:</p>
       
