@@ -71,10 +71,7 @@
       <h2>Introduction</h2>
       
       <p class="ednote">TODO: This section needs further development and refinement.</p>
-      <figure class="intro-figure">
-        <img src="images/use-case-arch.png" alt="Agent architecture: Personal Agent, Search Agent, and Service Agents" loading="lazy">
-        <figcaption>Agent collaboration architecture: Personal Agent ↔ Search Agent ↔ Service Agents</figcaption>
-      </figure>
+
       
       <section id="existing-work">
         <h3>Existing Work</h3>
@@ -128,23 +125,13 @@
           </ul>
         </section>
       </section>
-      
-      <section id="meeting-scheduling">
-        <h3>Meeting Scheduling and Online Meeting Arrangement</h3>
-        
-        <p><strong>Scenario Overview:</strong> Alice wants to have an online meeting with Bob. Alice tells her Personal Agent to schedule an appointment with Bob. Alice's Personal Agent organizes the meeting topic, expected duration, time zone, Alice's available time and preferences (such as weekday mornings, Wednesday priority, preferred video conferencing platform, etc.), and uses authorized contact information and identity credentials to contact Bob's Personal Agent through the agent protocol.</p>
-        
-        <p><strong>Step 1 - Information Organization and Request Initiation:</strong> Alice's Personal Agent generates a structured request (including agenda, objectives, candidate time windows, time zone, duration, preferred platform, participants, etc.) and sends it to Bob's Personal Agent; both parties use end-to-end encrypted channels for secure interaction.</p>
-        
-        <p><strong>Step 2 - Initial Negotiation and Option Generation:</strong> Bob's Personal Agent automatically avoids conflicts and constraints (lunch breaks, business trips, do-not-disturb periods, etc.) based on Bob's schedule and preferences, and conducts initial negotiations with Alice's Personal Agent to form several reasonable candidate time slots and meeting configuration options.</p>
-        
-        <p><strong>Step 3 - User Selection and Confirmation:</strong> Bob's Personal Agent presents the candidate options to Bob. After Bob selects one, Bob's Personal Agent sends the selection result and meeting elements (time, platform link, agenda summary) to Alice's Personal Agent. Alice's Personal Agent presents this option to Alice for confirmation.</p>
-        
-        <p><strong>Step 4 - Iterative Negotiation and Completion:</strong> If Alice agrees, both Personal Agents complete the confirmation and generate the final schedule and invitation (which may include ICS/calendar events, video conference links, meeting instructions, reminder settings), synchronize to both parties' calendars and notify participants; if Alice disagrees, Alice's Personal Agent sends back preference or constraint changes, and both parties continue negotiating until consensus is reached.</p>
-        
-        <p><strong>Collaboration Value:</strong> The two Personal Agents conduct information-minimized exchange and automatic negotiation based on standardized protocols, quickly converging under cross-time zone and complex constraint conditions, reducing repetitive communication costs, and improving meeting scheduling efficiency and privacy protection levels.</p>
-        
-        <p><strong>Requirements:</strong> <a href="#agent-identity-authentication">Agent Identity Authentication</a>, <a href="#agent-discovery">Agent Discovery</a>, <a href="#agent-description">Agent Description</a>, <a href="#agent-interaction">Agent Information Interaction</a>, <a href="#privacy-protection">Privacy Protection</a>, <a href="#identity-interoperability">Identity Interoperability</a></p>
+
+      <section id="concepts-architecture">
+        <h3>Concepts Architecture</h3>
+        <figure class="intro-figure">
+          <img src="images/use-case-arch.png" alt="Agent architecture: Personal Agent, Search Agent, and Service Agents" loading="lazy">
+          <figcaption>Agent collaboration architecture: Personal Agent ↔ Search Agent ↔ Service Agents</figcaption>
+        </figure>
       </section>
 
     </section>
@@ -171,10 +158,26 @@
         <p><strong>Collaboration Value:</strong> Throughout this process, the Personal Agent serves as Dixon's digital representative, the Search Agent provides agent discovery services, and the hotel Service Agent provides professional services. All three achieve seamless collaboration through standardized agent protocols, significantly improving booking efficiency and user experience.</p>
         
         <p><strong>Requirements:</strong> <a href="#agent-identity-authentication">Agent Identity Authentication</a>, <a href="#agent-discovery">Agent Discovery</a>, <a href="#agent-description">Agent Description</a>, <a href="#agent-interaction">Agent Information Interaction</a>, <a href="#agent-transactions">Agent Transactions</a>, <a href="#privacy-protection">Privacy Protection</a>, <a href="#identity-interoperability">Identity Interoperability</a></p>
-        
       
       </section>
 
+      <section id="meeting-scheduling">
+        <h3>Meeting Scheduling and Online Meeting Arrangement</h3>
+        
+        <p><strong>Scenario Overview:</strong> Alice wants to have an online meeting with Bob. Alice tells her Personal Agent to schedule an appointment with Bob. Alice's Personal Agent organizes the meeting topic, expected duration, time zone, Alice's available time and preferences (such as weekday mornings, Wednesday priority, preferred video conferencing platform, etc.), and uses authorized contact information and identity credentials to contact Bob's Personal Agent through the agent protocol.</p>
+        
+        <p><strong>Step 1 - Information Organization and Request Initiation:</strong> Alice's Personal Agent generates a structured request (including agenda, objectives, candidate time windows, time zone, duration, preferred platform, participants, etc.) and sends it to Bob's Personal Agent; both parties use end-to-end encrypted channels for secure interaction.</p>
+        
+        <p><strong>Step 2 - Initial Negotiation and Option Generation:</strong> Bob's Personal Agent automatically avoids conflicts and constraints (lunch breaks, business trips, do-not-disturb periods, etc.) based on Bob's schedule and preferences, and conducts initial negotiations with Alice's Personal Agent to form several reasonable candidate time slots and meeting configuration options.</p>
+        
+        <p><strong>Step 3 - User Selection and Confirmation:</strong> Bob's Personal Agent presents the candidate options to Bob. After Bob selects one, Bob's Personal Agent sends the selection result and meeting elements (time, platform link, agenda summary) to Alice's Personal Agent. Alice's Personal Agent presents this option to Alice for confirmation.</p>
+        
+        <p><strong>Step 4 - Iterative Negotiation and Completion:</strong> If Alice agrees, both Personal Agents complete the confirmation and generate the final schedule and invitation (which may include ICS/calendar events, video conference links, meeting instructions, reminder settings), synchronize to both parties' calendars and notify participants; if Alice disagrees, Alice's Personal Agent sends back preference or constraint changes, and both parties continue negotiating until consensus is reached.</p>
+        
+        <p><strong>Collaboration Value:</strong> The two Personal Agents conduct information-minimized exchange and automatic negotiation based on standardized protocols, quickly converging under cross-time zone and complex constraint conditions, reducing repetitive communication costs, and improving meeting scheduling efficiency and privacy protection levels.</p>
+        
+        <p><strong>Requirements:</strong> <a href="#agent-identity-authentication">Agent Identity Authentication</a>, <a href="#agent-discovery">Agent Discovery</a>, <a href="#agent-description">Agent Description</a>, <a href="#agent-interaction">Agent Information Interaction</a>, <a href="#privacy-protection">Privacy Protection</a>, <a href="#identity-interoperability">Identity Interoperability</a></p>
+      </section>
       
     </section>
 
