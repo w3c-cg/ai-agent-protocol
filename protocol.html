@@ -344,6 +344,122 @@
   ]
 }</code></pre>
       </div>
+
+      <h3>1. Core Concepts</h3>
+
+      <p>This specification defines two core concepts for agent description: Information and Interface. These concepts provide a standardized framework for agents to publish information externally, ensuring that agents can effectively discover, understand, and interact with each other.</p>
+      
+      <h4>1.1 Information</h4>
+      
+      <p>Information represents data resources that an agent provides to external entities. These resources can be structured or unstructured data used to describe the agent's capabilities, status, products, or services.</p>
+      
+      <p>Information resources include but are not limited to the following types:</p>
+      <ul>
+        <li>Structured data: JSON documents, XML files, database query results</li>
+        <li>Media resources: Images, videos, audio files and their associated metadata</li>
+        <li>Descriptive documents: Product specifications, service descriptions, usage guides</li>
+        <li>Status information: Agent current status, availability information, configuration parameters</li>
+      </ul>
+      
+      <p>Information has the following key characteristics:</p>
+      <ul>
+        <li><strong>Describability</strong>: Each Information resource must contain sufficient metadata to enable other agents to understand the resource's type, purpose, and access methods</li>
+        <li><strong>Discoverability</strong>: Information resources are exposed to external entities through unified description mechanisms, supporting automated discovery and indexing processes</li>
+      </ul>
+      
+      <h4>1.2 Interface</h4>
+      
+      <p>Interface defines standardized entry points for agents to engage in dynamic interactions with external entities. Interfaces provide callable representations of agent functionality, allowing other agents or systems to interact with them programmatically.</p>
+      
+      <p>Interfaces are divided into the following two main categories:</p>
+      
+      <h5>1.2.1 Natural Language Interface</h5>
+      
+      <p>Natural language interfaces provide agents with human language-based interaction capabilities. These interfaces allow the use of natural language queries and commands to access agent functionality.</p>
+      
+      <p>Characteristics of natural language interfaces include:</p>
+      <ul>
+        <li><strong>Language flexibility</strong>: Support for various natural language expressions, able to understand semantic variations and contextual information</li>
+        <li><strong>Personalized interaction</strong>: Ability to provide customized responses based on interaction history and user preferences</li>
+        <li><strong>Open-ended task processing</strong>: Suitable for task scenarios requiring creative thinking or complex reasoning</li>
+        <li><strong>Universality</strong>: It is recommended that all specification-compliant agents implement at least one natural language interface to ensure basic interoperability</li>
+      </ul>
+      
+      <h5>1.2.2 Structured Interface</h5>
+      
+      <p>Structured interfaces provide programmatic interaction methods based on predefined protocols and data formats. These interfaces follow standardized API design principles, ensuring predictability and efficiency.</p>
+      
+      <p>Characteristics of structured interfaces include:</p>
+      <ul>
+        <li><strong>Protocol standardization</strong>: Support for widely adopted protocol standards such as OpenAPI, JSON-RPC, GraphQL, WebRTC, etc.</li>
+        <li><strong>Type safety</strong>: Ensuring interaction correctness through explicit data type definitions and validation mechanisms</li>
+        <li><strong>Performance optimization</strong>: Compared to natural language interfaces, structured interfaces typically have lower latency and higher throughput</li>
+        <li><strong>Functional specialization</strong>: Each structured interface can be optimized for specific functional domains</li>
+      </ul>
+      
+      <h4>1.3 Interface Selection and Priority</h4>
+      
+      <p>Agents implementing the protocol should follow the following priority and selection strategies when choosing interaction interfaces:</p>
+      
+      <ol>
+        <li><strong>Structured interface priority principle</strong>: When there are structured interfaces that meet functional requirements, they should be prioritized for interaction to achieve optimal performance and reliability</li>
+        <li><strong>Functional completeness assessment</strong>: Before selecting an interface, it is necessary to evaluate whether the target interface can fully meet the functional requirements of the current task</li>
+        <li><strong>Fallback mechanism</strong>: When structured interfaces cannot meet complex or non-standardized requirements, fallback to natural language interfaces is acceptable</li>
+        <li><strong>Context-aware selection</strong>: Interface selection should consider task complexity, real-time requirements, and the degree of personalization needed</li>
+      </ol>
+      
+      <h3>2. Interaction Model</h3>
+      
+      <p>The protocol adopts a linked data-based interaction model that allows agents to organize their Information and Interfaces into a navigable data network through Uniform Resource Locators (URLs). This approach is similar to the hyperlink structure of the World Wide Web, enabling agents to construct their public data into a data network, where all data networks can be connected into an AI-accessible data network.</p>
+      
+      <h4>2.1 Networked Data Organization</h4>
+      
+      <p>The core principle of the interaction model is based on the following architectural design:</p>
+      
+      <h5>2.1.1 URL Link Network</h5>
+      
+      <p>Agents must use URLs as a unified addressing mechanism to organize their Information and Interface resources. Each URL points to a specific resource or interface definition, forming a traversable link graph. This design ensures:</p>
+      <ul>
+        <li><strong>Global uniqueness</strong>: Each resource has a unique network address</li>
+        <li><strong>Dereferencability</strong>: URLs can be directly used to access corresponding resources</li>
+        <li><strong>Link integrity</strong>: Relationships between resources are explicitly expressed through URL links</li>
+      </ul>
+      
+      <h5>2.1.2 Entry Point Mechanism</h5>
+      
+      <p>It is recommended that each agent provide a primary entry point, typically manifested as an Agent Description Document. This document functions similarly to a website's homepage and contains:</p>
+      <ul>
+        <li>Basic metadata and identification information of the agent</li>
+        <li>Links and descriptions of all available Information resources</li>
+        <li>Links and specification references for all available Interfaces</li>
+        <li>Necessary access control and security policy information</li>
+      </ul>
+      
+      <h4>2.2 Interaction Process</h4>
+      
+      <p>The interaction process between agents is similar to how web crawlers work, starting from an entry point and proceeding with recursive navigation. The client agent first obtains the target agent's description document URL, retrieves the document through an HTTP request, and then parses the Information resource links and Interface definition links contained within. Based on task requirements, the client agent selectively accesses relevant URL links. If the retrieved resources contain further links, it continues recursive retrieval until sufficient information needed to complete the task is collected.</p>
+      
+      <p>While gathering information, the client agent integrates this data in its local environment, formulates execution strategies, and selects appropriate Interfaces for invocation. The entire process emphasizes local decision processing, with sensitive information not passed to third parties but analyzed and processed locally at the client. Finally, the client agent executes specific operations through discovered Interfaces, processes return results, and completes tasks. This model ensures both privacy security and flexible on-demand information retrieval.</p>
+      
+      <h4>2.3 Architectural Advantages of the Interaction Model</h4>
+      
+      <h5>2.3.1 Compatibility with Existing Web Infrastructure</h5>
+      
+      <p>Fully leverages existing web technology stacks and infrastructure:</p>
+      <ul>
+        <li><strong>Protocol reuse</strong>: Based on HTTP/HTTPS protocols, compatible with existing network equipment and middleware</li>
+        <li><strong>Caching mechanisms</strong>: Supports standard web caching strategies, improving performance and scalability</li>
+        <li><strong>Search engine friendly</strong>: Information resources can be indexed by traditional search engines, enhancing agent discoverability</li>
+      </ul>
+      
+      <h5>2.3.2 Privacy Protection and Data Sovereignty</h5>
+      
+      <p>The local decision-making model provides important privacy protection advantages:</p>
+      <ul>
+        <li><strong>Data localization</strong>: Sensitive information is processed locally, reducing the risk of data leakage</li>
+        <li><strong>Selective sharing</strong>: Client agents can precisely control the scope of information shared with other agents</li>
+      </ul>
+      
       
       <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent description standards.</p>
       
