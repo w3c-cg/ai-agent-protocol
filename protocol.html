@@ -475,6 +475,147 @@
         <li><strong>Local Network Discovery</strong>: Agents can automatically broadcast and discover each other within local area networks, supporting agent collaboration within enterprises and private networks.</li>
       </ul>
       
+      <p>This specification defines the Agent Discovery Service Protocol (ADSP), a standardized protocol for discovering agents. Based on the JSON-LD format, it provides two discovery mechanisms: active discovery and passive discovery, aimed at enabling agents to be effectively discovered and accessed by other agents or search engines in the network.</p>
+      
+      <p>The core elements of the protocol include:</p>
+      <ol>
+        <li>Using JSON-LD as the foundational data format, supporting linked data and semantic web features</li>
+        <li>Defining an active discovery mechanism, using .well-known URI paths as agent discovery entry points</li>
+        <li>Providing a passive discovery mechanism, allowing agents to submit their descriptions to search services</li>
+        <li>Supporting pagination and linking of agent descriptions, facilitating the management of large numbers of agent information</li>
+      </ol>
+      
+      <section id="discovery-overview">
+        <h3>Overview</h3>
+        
+        <p>We use <a href="https://www.w3.org/TR/json-ld11/">JSON-LD</a> (JavaScript Object Notation for Linked Data) as the format for agent discovery documents, consistent with the Agent Description Protocol. By using JSON-LD, we can achieve rich semantic expression and linking relationships while maintaining simplicity and ease of use.</p>
+        
+        <p>Agent description documents are detailed expressions of agent information, as referenced in the Agent Description Protocol. The agent discovery document serves as a collection page, containing URLs of all public agent description documents under a domain, facilitating indexing and access by search engines or other agents.</p>
+      </section>
+      
+      <section id="active-discovery">
+        <h3>Active Discovery</h3>
+        
+        <p>Active discovery refers to search engines or agents only needing to know a domain to discover all public agent description documents under that domain. We adopt the Web standard <code>.well-known</code> URI path as the entry point for agent discovery.</p>
+        
+        <h4>.well-known URI</h4>
+        
+        <p>According to <a href="https://tools.ietf.org/html/rfc8615">RFC 8615</a>, <code>.well-known</code> URI provides a standardized way to discover services and resources. For agent discovery, we define the following path:</p>
+        
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>https://{domain}/.well-known/agent-descriptions</code></pre>
+        
+        <p>This path should return a JSON-LD document containing URLs of all public agent description documents under the domain.</p>
+        
+        <h4>Discovery Document Format</h4>
+        
+        <p>Active discovery documents adopt the JSON-LD format, using the <code>CollectionPage</code> type, containing the following core properties:</p>
+        
+        <ul>
+          <li><code>@context</code>: Defines the JSON-LD context used in the document</li>
+          <li><code>@type</code>: Document type, value is "CollectionPage"</li>
+          <li><code>url</code>: URL of the current page</li>
+          <li><code>items</code>: Array of agent description items</li>
+          <li><code>next</code>: (Optional) URL of the next page, used for pagination scenarios</li>
+        </ul>
+        
+        <p>Each agent description item contains:</p>
+        <ul>
+          <li><code>@type</code>: Type, value is "ad:AgentDescription"</li>
+          <li><code>name</code>: Agent name</li>
+          <li><code>@id</code>: URL of the agent description document (unique identifier of the resource)</li>
+        </ul>
+        
+        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-left: 4px solid #fdcb6e; padding: 15px; margin: 20px 0;">
+          <h4 style="margin-top: 0; color: #856404;">EXAMPLE</h4>
+          <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "did": "https://w3id.org/did#",
+    "ad": "https://agent-network-protocol.com/ad#"
+  },
+  "@type": "CollectionPage",
+  "url": "https://agent-network-protocol.com/.well-known/agent-descriptions",
+  "items": [
+    {
+      "@type": "ad:AgentDescription",
+      "name": "Smart Assistant",
+      "@id": "https://agent-network-protocol.com/agents/smartassistant/ad.json"
+    },
+    {
+      "@type": "ad:AgentDescription",
+      "name": "Customer Support Agent",
+      "@id": "https://agent-network-protocol.com/agents/customersupport/ad.json"
+    }
+  ],
+  "next": "https://agent-network-protocol.com/.well-known/agent-descriptions?page=2"
+}</code></pre>
+        </div>
+        
+        <h4>Pagination Mechanism</h4>
+        
+        <p>When there are a large number of agents under a domain, a pagination mechanism should be adopted. Pagination is implemented through the <code>next</code> property, pointing to the URL of the next page. Clients should recursively retrieve all pages until there is no <code>next</code> property.</p>
+      </section>
+      
+      <section id="passive-discovery">
+        <h3>Passive Discovery</h3>
+        
+        <p>Passive discovery refers to agents actively submitting their agent description URLs to other agents (typically search service agents), enabling them to index and crawl their information.</p>
+        
+        <h4>Registration API</h4>
+        
+        <p>Passive discovery typically requires using the registration API provided by search service agents. These APIs are defined by the search service agents themselves and should be clearly stated in their agent description documents. Agents can register their description URLs with search services by calling these APIs.</p>
+        
+        <h4>Registration Process</h4>
+        
+        <ol>
+          <li>Agent obtains the description document of the search service agent</li>
+          <li>Finds the registration API endpoint and parameter requirements from the description document</li>
+          <li>Constructs a registration request, including its own agent description URL and other necessary information</li>
+          <li>Sends the registration request to the search service</li>
+          <li>Search service verifies the request and indexes the agent</li>
+        </ol>
+        
+        <figure style="margin: 16px 0;">
+          <pre style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 16px; margin: 0; overflow-x: auto;"><code>sequenceDiagram
+    participant Agent as Agent
+    participant Search as Search Service Agent
+    
+    Agent->>Search: Get agent description document
+    Search-->>Agent: Return description document (including registration API info)
+    Note over Agent: Parse registration API from description document
+    Agent->>Search: Send registration request (including own description URL)
+    Note over Search: Verify request
+    Search-->>Agent: Confirm registration
+    Note over Search: Crawl agent description document and index</code></pre>
+          <figcaption style="text-align: center; color: #555;">Passive Discovery Registration Process</figcaption>
+        </figure>
+      </section>
+      
+      <section id="discovery-security">
+        <h3>Security Considerations</h3>
+        
+        <p>To ensure the security of agent discovery, the following measures are recommended:</p>
+        
+        <ol>
+          <li><strong>Content Validation</strong>: Search services should verify the validity and integrity of agent description documents</li>
+          <li><strong>DID Authentication</strong>: Use the did:wba method for identity authentication, ensuring the authenticity of agent identities</li>
+          <li><strong>Rate Limiting</strong>: Implement appropriate rate limiting measures to prevent malicious requests and DoS attacks</li>
+          <li><strong>Permission Control</strong>: Distinguish between public and private agents, only including public agents in discovery documents</li>
+        </ol>
+      </section>
+      
+      <section id="discovery-relationships">
+        <h3>Relationship with Other Protocols</h3>
+        
+        <p>The Agent Discovery Protocol is closely related to the following protocols:</p>
+        
+        <ol>
+          <li><strong>Agent Description Protocol</strong>: The discovery protocol provides indexing and access mechanisms for description documents</li>
+          <li><strong>DID:WBA Method</strong>: Provides identity authentication and security guarantees</li>
+          <li><strong>Meta-Protocol</strong>: In agent communication, protocol negotiation can be based on discovery results</li>
+        </ol>
+      </section>
+      
       <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent discovery standards.</p>
       
     </section>
