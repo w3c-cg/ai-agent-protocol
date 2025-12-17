@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>AI Agent Protocol Use Cases and Requirements</title>
+    <script src="https://www.w3.org/Tools/respec/respec-w3c" class="remove"></script>
+    <script class='remove'>
+      // See https://github.com/w3c/respec/wiki/ for how to configure ReSpec
+      var respecConfig = {
+        specStatus: "CG-DRAFT",
+        shortName: "ai-agent-protocol-use-cases",
+        editors: [
+          {
+            name: "Gaowei Chang",
+            company:"ANP Open Source Community",
+            companyURL:"https://agent-network-protocol.com/"
+          }
+        ],
+        authors: [
+
+        ],
+        group: "cg/agentprotocol",
+        github:"w3c-cg/ai-agent-protocol"
+      };
+    </script>
+    <style>
+      table {
+        border-collapse: collapse; 
+        width: 100%; 
+      }
+      table, th, td {
+        border: 1px solid black; 
+      }
+      .use-case {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin: 1rem 0;
+      }
+      .use-case h4 {
+        margin-top: 0;
+        color: #495057;
+      }
+      .intro-figure {
+        text-align: center;
+        margin: 1.5rem auto;
+      }
+      .intro-figure img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 0.25rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      }
+      .intro-figure figcaption {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+
+    <section id="abstract">
+      <h2>Abstract</h2>
+      <p>This document describes use cases and requirements for AI agent protocols, focusing on scenarios where intelligent agents need to interact, collaborate, and share information across different platforms and organizations. These use cases inform the requirements for developing standardized protocols that enable seamless agent-to-agent communication and cooperation.</p>
+    </section>
+    <section id="sotd"></section>
+    
+    <section id="introduction">
+      <h2>Introduction</h2>
+      
+      <p class="ednote">TODO: This section needs further development and refinement.</p>
+
+      
+      <section id="existing-work">
+        <h3>Existing Work</h3>
+        <p class="ednote">TODO: This section needs further development and refinement.</p>
+      </section>
+      
+      <section id="concepts">
+        <h3>Concepts of AI Agent Protocols</h3>
+        
+        <p>The AI Agent Protocol defines a standardized framework for intelligent agents to interact, collaborate, and provide services across different platforms and organizations. The following concepts are fundamental to understanding agent interactions:</p>
+        
+        <section id="personal-agent">
+          <h4>Personal Agent</h4>
+          <p><strong>Personal Agent</strong> refers to intelligent agents that directly serve individual users. These agents operate under user authorization, access user data, and interact with other agents on behalf of their users. Personal agents act as digital representatives for individuals, managing their preferences, schedules, communications, and various personal tasks while maintaining user privacy and control.</p>
+          
+          <p>Key characteristics of Personal Agents include:</p>
+          <ul>
+            <li>Direct user interaction and service provision</li>
+            <li>User-authorized access to personal data</li>
+            <li>Representation of user interests in agent-to-agent interactions</li>
+            <li>Privacy-preserving data handling</li>
+            <li>Personalized service delivery based on user preferences</li>
+          </ul>
+        </section>
+        
+        <section id="service-agent">
+          <h4>Service Agent</h4>
+          <p><strong>Service Agent</strong> refers to intelligent agents that provide services to other agents rather than directly serving individual users. These agents operate on the internet and offer specialized capabilities that can be consumed by Personal Agents or other Service Agents through standardized protocols. For example, a hotel's intelligent agent provides booking and accommodation services to Personal Agents through the AI Agent Protocol.</p>
+          
+          <p>Key characteristics of Service Agents include:</p>
+          <ul>
+            <li>Agent-to-agent service provision</li>
+            <li>Specialized domain expertise and capabilities</li>
+            <li>Standardized service interfaces and protocols</li>
+            <li>Scalable service delivery to multiple consuming agents</li>
+            <li>Business logic and domain-specific processing</li>
+          </ul>
+        </section>
+        
+        <section id="search-agent">
+          <h4>Search Agent</h4>
+          <p><strong>Search Agent</strong> refers to intelligent agents that facilitate agent discovery and connection. These agents maintain directories of available agents and their capabilities, enabling agents to find and connect with each other. Search Agents act as intermediaries in the agent ecosystem, providing discovery, matching, and connection services that enable the formation of dynamic agent networks.</p>
+          
+          <p>Key characteristics of Search Agents include:</p>
+          <ul>
+            <li>Agent discovery and directory services</li>
+            <li>Capability matching and recommendation</li>
+            <li>Network topology and connection facilitation</li>
+            <li>Agent metadata and reputation management</li>
+            <li>Dynamic agent network formation support</li>
+          </ul>
+        </section>
+      </section>
+
+      <section id="concepts-architecture">
+        <h3>Concepts Architecture</h3>
+        <figure class="intro-figure">
+          <img src="images/use-case-arch.png" alt="Agent architecture: Personal Agent, Search Agent, and Service Agents" loading="lazy">
+          <figcaption>Agent collaboration architecture: Personal Agent ↔ Search Agent ↔ Service Agents</figcaption>
+        </figure>
+      </section>
+
+    </section>
+
+    <section id="use-cases">
+      <h2>Use Cases</h2>
+      
+      <section id="customer-service-collaboration">
+        <h3>Customer Service Collaboration</h3>
+        <p class="ednote">TODO: This section needs further development and refinement.</p>
+      </section>
+
+      <section id="hotel-booking">
+        <h3>Hotel Booking</h3>
+        
+        <p><strong>Scenario Overview:</strong> Dixon is planning a vacation to Paris and needs to book a hotel that matches his preferences. He decides to let his Personal Agent handle this task, demonstrating the complete workflow of modern agent collaboration.</p>
+        
+        <p><strong>Step 1 - Requirements Analysis and Search:</strong> Dixon's Personal Agent, based on previously authorized access to personal data (including hotel preferences: 4-star or above, close to city center, with gym; vacation dates: March 15-22; budget range: 200-400 euros per night), uses the agent protocol to send a structured search request to the Search Agent. The Search Agent performs matching within its maintained global hotel agent network and quickly returns information for 100 qualifying hotel Service Agents.</p>
+        
+        <p><strong>Step 2 - Information Collection and Filtering:</strong> The Personal Agent uses Dixon's identity credentials to concurrently access these hotel Service Agents, requesting detailed information (real-time room rates, available room types, specific locations, facilities and services, user reviews, etc.). Each hotel Service Agent, recognizing potential customer access, proactively provides detailed service information and promotional offers. After collecting all information, the Personal Agent applies Dixon's personal preference algorithm to filter 8 best-matching hotel options from the 100 choices, ranking them by match score before pushing them to Dixon.</p>
+        
+        <p><strong>Step 3 - Booking and Payment:</strong> After reviewing the Personal Agent's recommended options, Dixon selects the second-ranked boutique hotel (because the top-ranked hotel had noise issues mentioned in reviews). The Personal Agent immediately establishes a booking session with that hotel Service Agent, completing room reservation and booking confirmation. However, due to security policies, the Personal Agent lacks payment authorization. After Dixon receives the successful booking notification, he completes payment through a secure payment interface. Once payment is completed, the Personal Agent automatically notifies the hotel Service Agent of the payment status and saves the complete booking information (confirmation number, check-in details, hotel contact information) to Dixon's personal travel profile.</p>
+        
+        <p><strong>Collaboration Value:</strong> Throughout this process, the Personal Agent serves as Dixon's digital representative, the Search Agent provides agent discovery services, and the hotel Service Agent provides professional services. All three achieve seamless collaboration through standardized agent protocols, significantly improving booking efficiency and user experience.</p>
+        
+        <p><strong>Requirements:</strong> <a href="#agent-identity-authentication">Agent Identity Authentication</a>, <a href="#agent-discovery">Agent Discovery</a>, <a href="#agent-description">Agent Description</a>, <a href="#agent-interaction">Agent Information Interaction</a>, <a href="#agent-transactions">Agent Transactions</a>, <a href="#privacy-protection">Privacy Protection</a>, <a href="#identity-interoperability">Identity Interoperability</a></p>
+      
+      </section>
+
+      <section id="meeting-scheduling">
+        <h3>Meeting Scheduling and Online Meeting Arrangement</h3>
+        
+        <p><strong>Scenario Overview:</strong> Alice wants to have an online meeting with Bob. Alice tells her Personal Agent to schedule an appointment with Bob. Alice's Personal Agent organizes the meeting topic, expected duration, time zone, Alice's available time and preferences (such as weekday mornings, Wednesday priority, preferred video conferencing platform, etc.), and uses authorized contact information and identity credentials to contact Bob's Personal Agent through the agent protocol.</p>
+        
+        <p><strong>Step 1 - Information Organization and Request Initiation:</strong> Alice's Personal Agent generates a structured request (including agenda, objectives, candidate time windows, time zone, duration, preferred platform, participants, etc.) and sends it to Bob's Personal Agent; both parties use end-to-end encrypted channels for secure interaction.</p>
+        
+        <p><strong>Step 2 - Initial Negotiation and Option Generation:</strong> Bob's Personal Agent automatically avoids conflicts and constraints (lunch breaks, business trips, do-not-disturb periods, etc.) based on Bob's schedule and preferences, and conducts initial negotiations with Alice's Personal Agent to form several reasonable candidate time slots and meeting configuration options.</p>
+        
+        <p><strong>Step 3 - User Selection and Confirmation:</strong> Bob's Personal Agent presents the candidate options to Bob. After Bob selects one, Bob's Personal Agent sends the selection result and meeting elements (time, platform link, agenda summary) to Alice's Personal Agent. Alice's Personal Agent presents this option to Alice for confirmation.</p>
+        
+        <p><strong>Step 4 - Iterative Negotiation and Completion:</strong> If Alice agrees, both Personal Agents complete the confirmation and generate the final schedule and invitation (which may include ICS/calendar events, video conference links, meeting instructions, reminder settings), synchronize to both parties' calendars and notify participants; if Alice disagrees, Alice's Personal Agent sends back preference or constraint changes, and both parties continue negotiating until consensus is reached.</p>
+        
+        <p><strong>Collaboration Value:</strong> The two Personal Agents conduct information-minimized exchange and automatic negotiation based on standardized protocols, quickly converging under cross-time zone and complex constraint conditions, reducing repetitive communication costs, and improving meeting scheduling efficiency and privacy protection levels.</p>
+        
+        <p><strong>Requirements:</strong> <a href="#agent-identity-authentication">Agent Identity Authentication</a>, <a href="#agent-discovery">Agent Discovery</a>, <a href="#agent-description">Agent Description</a>, <a href="#agent-interaction">Agent Information Interaction</a>, <a href="#privacy-protection">Privacy Protection</a>, <a href="#identity-interoperability">Identity Interoperability</a></p>
+      </section>
+      
+    </section>
+
+    <section id="requirements">
+      <h2>Requirements</h2>
+      
+      <section id="agent-identity-authentication">
+        <h3>Agent Identity Authentication</h3>
+        <p>Agents must be able to mutually identify each other's identity, origin, and trustworthiness, establishing trusted communication connections through standardized authentication mechanisms. Agent identity information must maintain consistency and integrity across cross-platform interactions.</p>
+      </section>
+      
+      <section id="agent-discovery">
+        <h3>Agent Discovery</h3>
+        <p>Agents must be easily discoverable and accessible by other agents in different network environments, supporting both global internet discovery and local network discovery mechanisms.</p>
+      </section>
+      
+      <section id="agent-description">
+        <h3>Agent Description</h3>
+        <p>Agents must be able to standardize descriptions of their basic information, service capabilities, and interaction interfaces, including metadata such as name, version, and service scope. Agents must clearly declare their functions, service types, processing capabilities, and areas of expertise.</p>
+      </section>
+      
+      <section id="agent-interaction">
+        <h3>Agent Information Interaction</h3>
+        <p>Communication between agents must support end-to-end encryption to ensure data transmission is not subject to eavesdropping, tampering, or replay attacks. Interaction protocols must have good scalability and version compatibility.</p>
+      </section>
+      
+      <section id="agent-transactions">
+        <h3>Agent Transactions</h3>
+        <p>Agent transactions must use technologies such as digital signatures and message authentication codes to ensure data integrity and authenticity. Transaction processes must support traceability and auditability.</p>
+      </section>
+      
+      <section id="privacy-protection">
+        <h3>Privacy Protection</h3>
+        <p>Agent interactions must only transmit the minimum information necessary to complete tasks, avoiding unnecessary personal data sharing. Personal privacy data must undergo desensitization, anonymization, or pseudonymization processing. Any cross-agent transmission of personal data requires explicit user consent and authorization.</p>
+      </section>
+      
+      <section id="identity-interoperability">
+        <h3>Identity Interoperability</h3>
+        <p>Agent identity protocols must have excellent interoperability and not depend on specific vendors or technology platforms.</p>
+      </section>
+    </section>
+
+    <section id="features-and-benefits">
+      <h2>Features and Benefits</h2>
+      <p class="ednote">TODO: This section needs further development and refinement.</p>
+    </section>
+
+    <section id="agent-actions">
+      <h2>Agent Actions</h2>
+     
+    </section>
+
+    <section id="focal-use-cases">
+      <h2>Focal Use Cases</h2>
+      
+    </section>
+    
+    <section id="references">
+      <h2>References</h2>
+      <ol>
+        <li><a href="https://w3c-cg.github.io/ai-agent-protocol/">AI Agent Protocol</a></li>
+      </ol>
+    </section>
+
+  </body>
+</html>

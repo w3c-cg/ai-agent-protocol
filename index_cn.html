@@ -3,7 +3,7 @@
   <head>
     
     <meta charset="utf-8">
-    <title>智能体网络协议白皮书</title>
+    <title>智能体网络协议技术报告</title>
     <script src="https://www.w3.org/Tools/respec/respec-w3c" class="remove"></script>
     <script class='remove'>
       // See https://github.com/w3c/respec/wiki/ for how to configure ReSpec
@@ -12,20 +12,39 @@
         shortName: "agent-network-protocol-whiter-paper",
         editors: [
           {
-            name: "Gaowei Chang",
-            company:"ANP Open Source Community",
-            companyURL:"https://agent-network-protocol.com/"
-          },
-          {
-              name: "Ruoxi Ran",
-              company: "W3C",
-              companyURL: "https://www.w3.org/"
-            },
-            {
-              name: "Song Xu",
-              company: "China Mobile",
-              companyURL: "https://www.chinamobileltd.com"
-            }
+          name: "Gaowei Chang",
+          company:"ANP Open Source Community",
+          companyURL:"https://agent-network-protocol.com/"
+         },
+         {
+            name: "Ruoxi Ran",
+            company: "W3C",
+            companyURL: "https://www.w3.org/"
+          }
+
+      ],
+      authors: [
+        {
+          name: "Song Xu",
+          company: "China Mobile",
+          companyURL: "https://www.chinamobileltd.com"
+        },
+        {
+          name: "Hong Hou",
+          company: "Peking University",
+          companyURL: "https://www.pku.edu.cn"
+        },
+        {
+          name: "Xi Sun",
+          company: "Ant Group Co., Ltd.",
+          companyURL: "https://www.antgroup.com/"
+        },
+        {
+          name: "Shengyi Zhang",
+          company: "Beijing Esandinfo Ltd.",
+          companyURL: "https://www.esandinfo.com/"
+        }
+
       ],
         group: "cg/agentprotocol",
         github:"w3c-cg/ai-agent-protocol"
@@ -43,8 +62,6 @@
       <h2>引言：从语义网的未竟愿景到Agentic Web的曙光</h2>
       
       <p>二十年前，Tim Berners-Lee及其合作者极具远见地提出了语义网（Semantic Web）的构想，其核心目标是创建一个以数据为中心、机器可读的网络（web of data），使计算机与人类能够更加高效地协作。这一构想描绘了一个充满智能的未来：日常的交易、行政事务及各种生活场景，都将由能够自主行动的“智能体”（intelligent agents）通过机器间的对话自动完成。为实现这一目标，语义网计划通过XML、RDF和本体（Ontology）等技术，为网络上的信息赋予明确定义的语义，使软件智能体能够自主地在网页之间漫游，代表用户高效地执行复杂任务。</p>   
-      
-      <p>尽管语义网的愿景极具前瞻性并产生了深远的影响，但在很大程度上并未完全实现，主要原因在于当时人工智能（AI）能力的局限。早期AI技术在理解自然语言、执行复杂推理以及处理现实世界中海量、模糊、不一致或不确定的数据方面存在明显不足，而知识的自动表示、大规模获取与深度推理的复杂性，更成为难以逾越的障碍。然而，以大型语言模型（LLMs）为代表的最新技术变革，正为实现这一宏伟愿景注入新的强大动力。现代AI在理解非结构化数据、多步骤推理、规划以及与工具和API交互等方面已取得显著突破，这些新能力正好弥补了早期AI在实现语义网目标时所面临的关键短板。</p>   
       
       <p>值得注意的是，语义网的原始构想中已经包含了丰富的“智能体”思想。这些智能体被设想为能够代表用户自动执行任务的实体。而以大型语言模型（LLMs）为代表的技术突破，让智能体能够自主行动、进行复杂推理并解决多步骤问题。这些智能体不再只是被动工具，而已成为数字生态系统中的积极参与者。在此背景下，“Agentic Web”（智能体网络）或“Internet of Agents”（智能体互联网）的概念应运而生。这一新的网络范式将智能体视为主要行动者，它们与网络资源、服务及其他智能体主动互动，共同完成用户目标。Agentic Web继承了语义网的核心愿景，并借助先进的AI能力，致力于构建一个由自主、智能且能高效协作的智能体组成的生态系统，从而使语义网关于机器智能高效处理信息、有效协助人类的理想逐步成为现实。</p>   
       
@@ -221,20 +238,6 @@
   </section>
 
   <section>
-    <h3>Agent Connect Protocol (ACP) (Cisco)</h3>
-    
-    <ul>
-      <li><strong>描述</strong>：ACP 是由 Cisco 主导，并与 LangChain、Galileo 等合作伙伴共同开发的开源协议，作为 AGNTCY 计划的一部分，旨在为分布式系统中的自主智能体提供协作和共享资源的通信层。。</li>
-      
-      <li><strong>主要特性/机制</strong>：ACP采用RESTful API作为标准接口，定义了智能体交互的方式，包括检索智能体可执行的工作流、创建和管理上下文线程以及运行智能体。它支持有状态的通信线程，允许智能体在任务中进行协商和共同推理，并通过消息传递实现松散耦合的交互。智能体发现通过 Agent Directory 和 OASF（Open Agentic Schema Framework）文档实现，后者是描述智能体功能、调用方法、输入/输出模式等的标准化 JSON 文件。ACP支持异步优先的交互、多部分消息和可观察性特性。</li>
-      
-      <li><strong>关注点/目标挑战</strong>：ACP主要解决企业环境中异构智能体（可能基于不同技术栈或框架构建）之间的通信障碍和协作效率问题。它旨在实现可扩展的、标准化的多智能体交互，使多个智能体能够作为一个逻辑单元共同完成复杂任务。</li>
-      
-      <li><strong>使用核心技术</strong>：RESTful API，JSON（用于 OASF 文档和消息模式）。可与LangGraph等工作流框架集成。</li>
-    </ul>
-  </section>
-
-  <section>
     <h3>智能体网络协议 (ANP)</h3>
     
     <ul>
@@ -254,6 +257,43 @@
     </ul>
   </section>
 
+
+  <section>
+    <h3>Agent Connect Protocol (ACP) </h3>
+    
+    <ul>
+      <li><strong>描述</strong>：ACP 是由 Cisco 主导，并与 LangChain、Galileo 等合作伙伴共同开发的开源协议，作为 AGNTCY 计划的一部分，旨在为分布式系统中的自主智能体提供协作和共享资源的通信层。。</li>
+      
+      <li><strong>主要特性/机制</strong>：ACP采用RESTful API作为标准接口，定义了智能体交互的方式，包括检索智能体可执行的工作流、创建和管理上下文线程以及运行智能体。它支持有状态的通信线程，允许智能体在任务中进行协商和共同推理，并通过消息传递实现松散耦合的交互。智能体发现通过 Agent Directory 和 OASF（Open Agentic Schema Framework）文档实现，后者是描述智能体功能、调用方法、输入/输出模式等的标准化 JSON 文件。ACP支持异步优先的交互、多部分消息和可观察性特性。</li>
+      
+      <li><strong>关注点/目标挑战</strong>：ACP主要解决企业环境中异构智能体（可能基于不同技术栈或框架构建）之间的通信障碍和协作效率问题。它旨在实现可扩展的、标准化的多智能体交互，使多个智能体能够作为一个逻辑单元共同完成复杂任务。</li>
+      
+      <li><strong>使用核心技术</strong>：RESTful API，JSON（用于 OASF 文档和消息模式）。可与LangGraph等工作流框架集成。</li>
+    </ul>
+  </section>
+
+
+  <section>
+    <h3>Agent Communication Protocol (ACP) </h3>
+    
+    <ul>
+      <li><strong>描述</strong>：Agent Communication Protocol (ACP) 是一个由IBM贡献给Linux基金会的开源标准，旨在为异构AI智能体提供共享语言，实现连接、协作与复杂任务执行。该协议的主要目标是消除供应商锁定，通过开放治理模式促进智能体生态系统的发展。</li>
+      
+      <li><strong>主要特性/机制</strong>：ACP定义了一个标准化的RESTful API，支持同步、异步和流式交互，并采用对等方交互设计。其核心特性包括：
+        <ul>
+          <li><strong>无需专门SDK</strong>：协议设计上无需专门SDK即可交互，可直接使用标准HTTP工具进行交互，同时提供Python/TypeScript SDK。</li>
+          <li><strong>离线发现</strong>：通过元数据实现智能体发现，可嵌入分发包实现离线发现，使用Agent Detail模型描述智能体。</li>
+          <li><strong>对等交互</strong>：强调对等方交互，支持智能体之间的直接通信协作。</li>
+          <li><strong>与MCP互补</strong>：与Model Context Protocol (MCP)形成互补关系，专注于智能体间通信。</li>
+        </ul>
+      </li>
+      
+      <li><strong>关注点/目标挑战</strong>：ACP主要解决异构AI智能体之间的互操作性问题，通过提供共享通信语言来实现跨框架、跨技术栈的智能体协作。该协议特别强调避免供应商锁定，采用开源、Linux基金会治理模式确保标准的开放性和中立性。</li>
+      
+      <li><strong>使用核心技术</strong>：HTTP, JSON, OpenAPI Specification, Python/TypeScript SDKs。协议依赖底层HTTP(S)及部署环境的企业级安全实践，支持在安全/气隙环境中的发现和交互。</li>
+    </ul>
+  </section>
+
   <section>
     <h3>协议比较分析</h3>
     
@@ -266,8 +306,9 @@
       <th>特性</th>
       <th>模型上下文协议 (MCP)</th>
       <th>Agent-to-Agent 协议 (A2A)</th>
-      <th>Agent Connect Protocol (ACP)</th>
       <th>智能体网络协议 (ANP)</th>
+      <th>Agent Connect Protocol (ACP-Cisco)</th>
+      <th>Agent Communication Protocol (ACP-IBM)</th>
     </tr>
   </thead>
   <tbody>
@@ -275,64 +316,73 @@
       <td><strong>主要支持者/发起者</strong></td>
       <td>Anthropic</td>
       <td>Google 与 50+ 行业伙伴</td>
-      <td>Cisco (AGNTCY倡议)</td>
       <td>ANP开源社区</td>
+      <td>Cisco (AGNTCY倡议)</td>
+      <td>IBM (贡献给Linux基金会)</td>
     </tr>
     <tr>
       <td><strong>主要目标/关注领域</strong></td>
       <td>为LLM/智能体提供结构化外部上下文，解决M×N集成问题</td>
       <td>跨供应商/框架的异构智能体互操作、任务协作与动态协商</td>
-      <td>企业环境中结构化、持久的多智能体协作与工作流</td>
       <td>智能体在互联网上的连接与协作</td>
+      <td>企业环境中结构化、持久的多智能体协作与工作流</td>
+      <td>为异构AI智能体提供共享语言，实现连接、协作与复杂任务执行；消除供应商锁定</td>
     </tr>
     <tr>
       <td><strong>通信风格</strong></td>
       <td>客户端-服务器</td>
       <td>客户端-远程智能体（点对点概念，可有中介），任务导向</td>
-      <td>RESTful API，执行式消息传递，支持有状态线程</td>
       <td>点对点的协议架构</td>
+      <td>RESTful API，执行式消息传递，支持有状态线程</td>
+      <td>基于HTTP的RESTful API，支持同步、异步和流式交互；支持对等方交互</td>
     </tr>
     <tr>
       <td><strong>使用核心技术</strong></td>
       <td>JSON-RPC, HTTP, SSE</td>
       <td>HTTP(S), JSON-RPC 2.0, SSE</td>
-      <td>RESTful APIs, JSON</td>
       <td>W3C DIDs, JSON-LD, W3C VC, End-to-End Encryption</td>
+      <td>RESTful APIs, JSON</td>
+      <td>HTTP, JSON, OpenAPI Specification, Python/TypeScript SDKs</td>
     </tr>
     <tr>
       <td><strong>发现机制</strong></td>
       <td>通常由应用集成或宿主应用管理</td>
       <td>Agent Cards (JSON元数据, 通常在 /.well-known/agent.json 发布)</td>
-      <td>Agent Directory, Agent Manifests (JSON)</td>
       <td>基于RFC 8615,通常在 /.well-known/agent-descriptions发布</td>
+      <td>Agent Directory, Agent Manifests (JSON)</td>
+      <td>通过元数据（可嵌入分发包实现离线发现），Agent Detail模型</td>
     </tr>
     <tr>
       <td><strong>身份管理方法</strong></td>
       <td>OAuth 2.1</td>
       <td>带外身份认证方案</td>
-      <td>取决于企业集成 (例如 OAuth)</td>
       <td>W3C DIDs (去中心化标识符)</td>
+      <td>取决于企业集成 (例如 OAuth)</td>
+      <td>依赖底层HTTP(S)及部署环境的企业级安全实践；协议本身未严格规定</td>
     </tr>
     <tr>
       <td><strong>强调的安全特性</strong></td>
       <td>安全上下文获取 (例如通过TLS)，本地优先安全</td>
       <td>TLS, 服务器身份验证, 客户端/用户身份验证</td>
-      <td>TLS, 企业级安全实践</td>
       <td>TLS, 端到端加密, 基于DID的认证</td>
+      <td>TLS, 企业级安全实践</td>
+      <td>依赖HTTPS传输安全；支持在安全/气隙环境发现</td>
     </tr>
     <tr>
       <td><strong>状态管理</strong></td>
       <td>通常无状态或由客户端/宿主应用管理，但MCP服务器可暴露有状态资源</td>
       <td>支持长时任务状态跟踪 (有状态交互)</td>
-      <td>有状态通信线程</td>
       <td>可支持有状态交互 (由应用协议层确定)</td>
+      <td>有状态通信线程</td>
+      <td>支持有状态交互（例如通过 Await 机制）</td>
     </tr>
     <tr>
       <td><strong>关键差异化/独特之处</strong></td>
       <td>专注于模型与工具/数据的"最后一公里"连接，作为其他协议的补充</td>
       <td>强调跨不同系统和供应商的智能体协作的开放标准，支持多种交互模态</td>
-      <td>适用于受控企业环境的深度协作</td>
       <td>适用于智能体在不可信的互联网环境中的交互与协作</td>
+      <td>适用于受控企业环境的深度协作</td>
+      <td>开源、Linux基金会治理、避免供应商锁定；强调对等交互；与MCP互补；设计上无需专门SDK即可交互</td>
     </tr>
   </tbody>
 </table>

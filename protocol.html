@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Protocol(Tentative)</title>
+    <script src="https://www.w3.org/Tools/respec/respec-w3c" class="remove"></script>
+    <script class='remove'>
+      // See https://github.com/w3c/respec/wiki/ for how to configure ReSpec
+      var respecConfig = {
+        specStatus: "CG-DRAFT",
+        shortName: "Protocol(Tentative)",
+        editors: [
+          {
+            name: "Gaowei Chang",
+            company:"ANP Open Source Community",
+            companyURL:"https://agent-network-protocol.com/"
+          }
+        ],
+        authors: [
+
+        ],
+        group: "cg/agentprotocol",
+        github:"w3c-cg/ai-agent-protocol"
+      };
+    </script>
+    <style>
+      table {
+        border-collapse: collapse; 
+        width: 100%; 
+      }
+      table, th, td {
+        border: 1px solid black; 
+      }
+      /* Normalize heading typography (fix unexpected small-caps/uppercase) */
+      h1, h2, h3, h4, h5, h6 {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+        font-variant: normal;
+        text-transform: none;
+        letter-spacing: normal;
+      }
+    </style>
+    <script>
+      // Flatten ToC so that sections like Introduction/Agent Identity appear as top-level items
+      (async () => {
+        try {
+          await document.respecReady; // wait until ReSpec finishes rendering
+          const toc = document.getElementById("toc") || document.querySelector("nav#toc");
+          if (!toc) return;
+          const topUl = toc.querySelector("ul");
+          if (!topUl) return;
+          const firstLi = topUl.firstElementChild;
+          if (!firstLi) return;
+          const titleEl = document.querySelector("h1");
+          const titleText = titleEl ? titleEl.textContent.trim() : "";
+          const firstTextEl = firstLi.querySelector(":scope > a, :scope > span");
+          const firstText = firstTextEl ? firstTextEl.textContent.trim() : "";
+          const childUl = firstLi.querySelector(":scope > ul");
+          // If the first ToC item equals the doc title and has children, lift children to top-level
+          if (childUl && titleText && firstText && firstText === titleText) {
+            const children = Array.from(childUl.children);
+            for (const li of children) {
+              topUl.insertBefore(li, firstLi);
+            }
+            firstLi.remove();
+          }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn("ToC flattening skipped:", err);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+
+    <section id="abstract">
+      <h2>Abstract</h2>
+      <p></p>
+    </section>
+    <section id="sotd"></section>
+    
+    <section id="introduction">
+      <h2>Introduction</h2>
+      
+      <p class="ednote">TODO: This section needs further development and refinement.</p>
+      
+      <section id="design-goals">
+        <h3>Design Goals</h3>
+        <p class="ednote">TODO: This section needs further development and refinement.</p>
+      </section>
+      
+      <section id="architecture-overview">
+        <h3>Architecture Overview</h3>
+        <p class="ednote">TODO: This section needs further development and refinement.</p>
+      </section>
+      
+    </section>
+
+    <section id="conformance">
+      <h2>Conformance</h2>
+      
+      <p>As well as sections marked as non-normative, all authoring guidelines, diagrams, examples, and notes in this specification are non-normative. Everything else in this specification is normative.</p>
+      
+      <p>The key words MAY and MUST in this document are to be interpreted as described in <a href="https://datatracker.ietf.org/doc/html/bcp14">BCP 14</a> [[RFC2119]] [[RFC8174]] when, and only when, they appear in all capitals, as shown here.</p>
+      
+    </section>
+
+    <section id="agent-identity">
+      <h2>Agent Identity</h2>
+      
+      <p>The primary objective of the Agent Identity module is to address the interconnection and interoperability challenges between any two agents, particularly when these agents belong to different companies, organizations, or development platforms. They must be able to mutually identify, establish trust, and transfer identity information:</p>
+      <ul>
+        <li><strong>Mutual Recognition</strong>: Agents can accurately identify each other's identity, origin, and trustworthiness.</li>
+        <li><strong>Trust Establishment</strong>: Agents can establish trusted communication connections through standardized identity verification mechanisms without pre-established relationships.</li>
+        <li><strong>Identity Transfer</strong>: Agent identity information can maintain consistency and integrity across cross-platform interactions.</li>
+      </ul>
+      
+      <p>Therefore, agent identity protocols must possess excellent interoperability.</p>
+      
+      <section id="why-did-for-agents">
+        <h3>Why DID fits Agent Identity</h3>
+        <p>Decentralized Identifiers (DIDs) provide a standards-based, verifiable identity primitive for agents to identify, authenticate, and authorize each other across heterogeneous ecosystems.</p>
+        <ul>
+          <li><strong>Interoperability</strong>: The W3C DID Core data model and resolution interfaces enable cross-vendor, cross-platform interoperability. Any conforming DID method can be resolved into a DID Document that encodes verification methods and service endpoints in a uniform structure, allowing agents to communicate with minimal assumptions about the counterparty's stack.</li>
+          <li><strong>Decentralization</strong>: DIDs are created and controlled by their subjects and anchored by cryptographic keys, without relying on a single central registry. This reduces vendor lock-in, avoids single points of failure, and supports peer-to-peer trust establishment.</li>
+        </ul>
+      </section>
+      
+      <section id="why-web-based-did">
+        <h3>Why a Web-based DID method (did:wba)</h3>
+        <ul>
+          <li><strong>High security</strong>: Reuses the mature Web PKI and HTTPS. DID Documents are hosted under authenticated Web origins, benefiting from TLS, DNS ownership validation, and existing operational security practices — matching the security level of today’s websites.</li>
+          <li><strong>Simplicity of operations</strong>: The domain owner manages identifier lifecycle within its namespace (create, update, revoke). Peers fetch DID Documents directly via HTTP(S) (for example, <code>did:wba:agent.example.com:alice</code> resolves to <code>https://agent.example.com/alice/did.json</code>), enabling straightforward discovery without bespoke networks.</li>
+          <li><strong>Leverages existing Web infrastructure and scales</strong>: Builds on ubiquitous DNS, HTTP, CDNs, caching, and monitoring stacks, enabling horizontal scalability to billions of identifiers and low operational overhead.</li>
+        </ul>
+        <p class="note">Note: The did:wba method follows a Web-anchored resolution model aligned with existing enterprise and public Internet deployments.</p>
+        <p><strong>Method reference</strong>: <a href="https://github.com/agent-network-protocol/AgentNetworkProtocol/blob/main/03-did-wba-method-design-specification.md">did:wba method design specification</a></p>
+
+        <h3>Cross-Platform Identity Authentication Based on did:wba Method and HTTP Protocol</h3>
+        <p>When a client makes a request to a service on different platforms, the client can use the domain name combined with TLS to authenticate the service. The service then verifies the identity of the client based on the verification methods in the client's DID document.</p>
+        <p>The client can include the DID and signature in the HTTP header during the first HTTP request. Without increasing the number of interactions, the service can quickly verify the identity of the client. After the initial verification is successful, the service can return a access token to the client. The client can then carry the access token in subsequent requests, and the service does not need to verify the client's identity each time, but only needs to verify the access token.</p>
+
+        <figure style="margin: 16px 0;">
+          <img src="images/did-wba-flow.png" alt="did:wba cross-platform authentication flow" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
+          <figcaption style="text-align: center; color: #555;">Cross-Platform Identity Authentication Flow (did:wba)</figcaption>
+        </figure>
+
+        <h4>Initial Request</h4>
+        <p>When the client first makes an HTTP request to the service, it needs to authenticate according to the following method.</p>
+
+        <h5>Request Header Format</h5>
+        <p>The client sends the following information through the Authorization header field to the service:</p>
+        <ul>
+          <li><strong>DIDWba</strong>: Indicates the use of the did:wba protocol</li>
+          <li><strong>did</strong>: The did identifier of the client, used for identity verification.</li>
+          <li><strong>nonce</strong>: A randomly generated string used to prevent replay attacks. It must be unique for each request. We recommend using a 16-byte random string.</li>
+          <li><strong>timestamp</strong>: The time when the request is initiated, usually in UTC format using ISO 8601, accurate to seconds.</li>
+          <li><strong>verification_method</strong>: Identifies the verification method used in the signature, which is the DID fragment of the verification method in the DID document. For example, for the verification method <code>did:wba:example.com%3A8800:user:alice#key-1</code>, the verification method's DID fragment is <code>key-1</code>.</li>
+          <li><strong>signature</strong>: Sign the nonce, timestamp, service domain, and client DID. For ECDSA signatures, use the R|S format. It includes the following fields:
+            <ul>
+              <li>nonce</li>
+              <li>timestamp</li>
+              <li>service (the domain name of the service)</li>
+              <li>did (the DID of the client)</li>
+            </ul>
+          </li>
+        </ul>
+        <p>Client request example:</p>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>Authorization: DIDWba did="did:wba:example.com%3A8800:user:alice", nonce="abc123", timestamp="2024-12-05T12:34:56Z", verification_method="key-1", signature="base64url(signature_of_nonce_timestamp_service_did)"</code></pre>
+
+        <h5>Signature Generation Process</h5>
+        <p>The client generates a string containing the following information:</p>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>{
+  "nonce": "abc123",
+  "timestamp": "2024-12-05T12:34:56Z",
+  "service": "example.com",
+  "did": "did:wba:example.com:user:alice"
+}</code></pre>
+        <ol>
+          <li>Use JCS(JSON Canonicalization Scheme) to normalize the JSON string, generating a normalized string.</li>
+          <li>Use the SHA-256 algorithm to hash the normalized string, generating a hash value.</li>
+          <li>Use the client's private key to sign the hash value, generating a signature value signature, and encode it in URL-safe Base64.</li>
+          <li>Construct the Authorization header in the above format and send it to the service.</li>
+        </ol>
+
+        <h4>Service Verification</h4>
+        <h5>Verify Request Header</h5>
+        <p>After receiving the client's request, the service performs the following verification:</p>
+        <ul>
+          <li><strong>Verify Timestamp</strong>: Check if the timestamp in the request is within a reasonable time range. The recommended time range is 1 minute. If the timestamp is out of range, the request is considered expired, and the service returns 401 Unauthorized with a authentication challenge.</li>
+          <li><strong>Verify Nonce</strong>: Check if the nonce in the request has been used or exists. If the nonce has been used or exists, it is considered a replay attack, and the service returns 401 Unauthorized with a authentication challenge.</li>
+          <li><strong>Verify DID Permissions</strong>: Verify if the DID in the request has the permission to access the resources of the service. If not, the service returns 403 Forbidden.</li>
+          <li><strong>Verify Signature</strong>:
+            <ol>
+              <li>Read the DID document based on the client's DID.</li>
+              <li>Find the corresponding verification method in the DID document based on the <code>verification_method</code> in the request.</li>
+              <li>Use the public key of the verification method to verify the signature in the request.</li>
+            </ol>
+            Verification Result: If the signature verification is successful, the request passes verification; otherwise, the service returns 401 Unauthorized with a authentication challenge.
+          </li>
+        </ul>
+
+        <h5>Signature Verification Process</h5>
+        <ol>
+          <li><strong>Extract Information</strong>: Extract <code>nonce</code>, <code>timestamp</code>, <code>service</code>, <code>did</code>, and <code>verification_method</code> from the Authorization header.</li>
+          <li><strong>Build Verification String</strong>: Construct a JSON string identical to the one constructed by the client:</li>
+        </ol>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>{
+  "nonce": "abc123",
+  "timestamp": "2024-12-05T12:34:56Z",
+  "service": "example.com",
+  "did": "did:wba:example.com:user:alice"
+}</code></pre>
+        <ol start="3">
+          <li><strong>Normalize String</strong>: Use JCS(JSON Canonicalization Scheme) to normalize the JSON string, generating a normalized string.</li>
+          <li><strong>Generate Hash Value</strong>: Use the SHA-256 algorithm to hash the normalized string, generating a hash value.</li>
+          <li><strong>Get Public Key</strong>: Obtain the corresponding public key from the DID document based on <code>did</code> and <code>verification_method</code>.</li>
+          <li><strong>Verify Signature</strong>: Use the obtained public key to verify the signature, ensuring that it is generated by the corresponding private key.</li>
+        </ol>
+
+        <h5>Authentication Success Return Access Token</h5>
+        <p>After the service successfully verifies the client's identity, it can return a access token in the response. The access token is recommended to be in JWT (JSON Web Token) format. The client can then carry the access token in subsequent requests, and the service does not need to verify the client's identity each time, but only needs to verify the access token.</p>
+        <p>The following generation process is not required by the specification, but is provided for reference. Implementers can define and implement it as needed.</p>
+        <p>JWT generation method reference RFC7519.</p>
+        <p><strong>Generate Access Token</strong></p>
+        <p>Assuming the service uses JWT (JSON Web Token) as the access token format, JWT typically contains the following fields:</p>
+        <ul>
+          <li><strong>header</strong>: Specifies the signing algorithm</li>
+          <li><strong>payload</strong>: Stores user-related information</li>
+          <li><strong>signature</strong>: Signs the header and payload to ensure their integrity</li>
+        </ul>
+        <p>The payload can include the following fields (other fields can be added as needed):</p>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>{
+  "sub": "did:wba:example.com:user:alice",  // User DID 
+  "iat": "2024-12-05T12:34:56Z",            // Issued time
+  "exp": "2024-12-06T12:34:56Z",            // Expiration time
+}</code></pre>
+        <p>Implementers can add other security measures in the payload, such as using scope or binding IP addresses.</p>
+        <p><strong>Return Access Token</strong> The generated header, payload, and signature are concatenated and URL-safe Base64 encoded to form the final access token. Then, the access token is returned through the Authorization header:</p>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>Authorization: Bearer &lt;access_token&gt;</code></pre>
+        <p><strong>Client Send Access Token</strong> The client sends the access token through the Authorization header field to the service:</p>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>Authorization: Bearer &lt;access_token&gt;</code></pre>
+        <p><strong>Service Verify Access Token</strong> After receiving the client's request, the service extracts the access token from the Authorization header and verifies it, including verifying the signature, verifying the expiration time, and verifying the fields in the payload. The verification method is based on RFC7519.</p>
+
+        <h5>Error Handling</h5>
+        <p><strong>401 Response</strong></p>
+        <p>When the server fails to verify the signature and requires the client to reinitiate the request, it should return a 401 response.</p>
+        <p>Additionally, if the server doesn't support recording client request Nonces, or requires clients to always use server-generated Nonces for signing, it may return a 401 response with an authentication challenge containing a Nonce for each initial client request. However, this increases the number of client requests, and implementers can choose whether to use this approach.</p>
+        <p>Error information is returned through the WWW-Authenticate header field, for example:</p>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>WWW-Authenticate: Bearer error="invalid_nonce", error_description="Nonce has already been used. Please provide a new nonce.", nonce="xyz987"</code></pre>
+        <p>Contains the following fields:</p>
+        <ul>
+          <li><strong>error</strong>: Required field, error type, containing the following string values:
+            <ul>
+              <li><code>invalid_request</code>: Request format error, missing required fields, or contains unsupported parameters.</li>
+              <li><code>invalid_nonce</code>: Nonce has already been used.</li>
+              <li><code>invalid_timestamp</code>: Timestamp is out of range.</li>
+              <li><code>invalid_did</code>: DID format error, or unable to find corresponding DID document.</li>
+              <li><code>invalid_signature</code>: Signature verification failed.</li>
+              <li><code>invalid_verification_method</code>: Unable to find corresponding public key based on verification method.</li>
+              <li><code>invalid_access_token</code>: Access token verification failed.</li>
+              <li><code>forbidden_did</code>: DID lacks permission to access server resources.</li>
+            </ul>
+          </li>
+          <li><strong>error_description</strong>: Optional field, error description.</li>
+          <li><strong>nonce</strong>: Optional field, server-generated random string. If present, the client must use this Nonce to regenerate the signature and reinitiate the request.</li>
+        </ul>
+        <p>When the client receives a 401 response, if the response contains a Nonce, the client must use the server's Nonce to regenerate the signature and reinitiate the request. If the response doesn't contain a Nonce, the client must use a client-generated Nonce to regenerate the signature and reinitiate the request.</p>
+        <p>It's important to note that both client and server implementations should limit the number of retry attempts to prevent infinite loops.</p>
+
+        <p><strong>403 Response</strong></p>
+        <p>When server authentication succeeds but the DID lacks permission to access server resources, a 403 response should be returned.</p>
+      </section>
+    
+      <p>The following example demonstrates a DID document using the did:wba method:</p>
+      
+      <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-left: 4px solid #fdcb6e; padding: 15px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #856404;">EXAMPLE</h4>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>{
+"@context": [
+  "https://www.w3.org/ns/did/v1",
+  "https://w3id.org/security/suites/ed25519-2020/v1"
+],
+"id": "did:wba:agent.example.com:alice",
+"verificationMethod": [
+  {
+    "id": "did:wba:agent.example.com:alice#key-1",
+    "type": "Ed25519VerificationKey2020",
+    "controller": "did:wba:agent.example.com:alice",
+    "publicKeyMultibase": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+  }
+],
+"authentication": [
+  "did:wba:agent.example.com:alice#key-1"
+],
+"service": [
+  {
+    "id": "did:wba:agent.example.com:alice#agent-desc",
+    "type": "AgentDescription", 
+    "serviceEndpoint": "https://agent.example.com/alice/description.json"
+  }
+]
+}</code></pre>
+      </div>
+      
+      <p>This DID resolves to: <code>https://agent.example.com/alice/did.json</code></p>
+
+      <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent identity standards.</p>
+      
+    </section>
+
+    <section id="agent-description">
+      <h2>Agent Description</h2>
+      
+      <p>The core objective of the Agent Description module is to establish standardized agent description mechanisms, enabling agents to clearly publish their basic information, service capabilities, and interaction interfaces to other agents in the network, thereby achieving efficient capability discovery and collaboration matching:</p>
+      
+      <ul>
+        <li><strong>Basic Information Description</strong>: Agents can standardize the description of their name, version, affiliated organization, service scope, and other fundamental metadata.</li>
+        <li><strong>Capability Declaration</strong>: Agents can clearly declare the functions they can provide, service types, processing capabilities, and areas of expertise.</li>
+        <li><strong>Interaction Protocols</strong>: Agents can declare the communication protocols, message formats, and interaction modes they support.</li>
+      </ul>
+      
+      <p>Therefore, agent description protocols must possess good extensibility and semantic clarity, ensuring that different agents can accurately understand each other's capability boundaries.</p>
+      
+      <p>The following example demonstrates an agent description document:</p>
+      
+      <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-left: 4px solid #fdcb6e; padding: 15px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #856404;">EXAMPLE</h4>
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "ad": "https://example.com/ad#"
+  },
+  "@type": "ad:AgentDescription",
+  "name": "SmartAssistant",
+  "did": "did:wba:agent.example.com:alice",
+  "description": "An intelligent agent providing natural language processing capabilities",
+  "version": "1.0.0",
+  "interfaces": [
+    {
+      "@type": "ad:NaturalLanguageInterface",
+      "protocol": "YAML",
+      "url": "https://agent.example.com/alice/nl-interface.yaml"
+    }
+  ]
+}</code></pre>
+      </div>
+
+      <h3>1. Core Concepts</h3>
+
+      <p>This specification defines two core concepts for agent description: Information and Interface. These concepts provide a standardized framework for agents to publish information externally, ensuring that agents can effectively discover, understand, and interact with each other.</p>
+      
+      <h4>1.1 Information</h4>
+      
+      <p>Information represents data resources that an agent provides to external entities. These resources can be structured or unstructured data used to describe the agent's capabilities, status, products, or services.</p>
+      
+      <p>Information resources include but are not limited to the following types:</p>
+      <ul>
+        <li>Structured data: JSON documents, XML files, database query results</li>
+        <li>Media resources: Images, videos, audio files and their associated metadata</li>
+        <li>Descriptive documents: Product specifications, service descriptions, usage guides</li>
+        <li>Status information: Agent current status, availability information, configuration parameters</li>
+      </ul>
+      
+      <p>Information has the following key characteristics:</p>
+      <ul>
+        <li><strong>Describability</strong>: Each Information resource must contain sufficient metadata to enable other agents to understand the resource's type, purpose, and access methods</li>
+        <li><strong>Discoverability</strong>: Information resources are exposed to external entities through unified description mechanisms, supporting automated discovery and indexing processes</li>
+      </ul>
+      
+      <h4>1.2 Interface</h4>
+      
+      <p>Interface defines standardized entry points for agents to engage in dynamic interactions with external entities. Interfaces provide callable representations of agent functionality, allowing other agents or systems to interact with them programmatically.</p>
+      
+      <p>Interfaces are divided into the following two main categories:</p>
+      
+      <h5>1.2.1 Natural Language Interface</h5>
+      
+      <p>Natural language interfaces provide agents with human language-based interaction capabilities. These interfaces allow the use of natural language queries and commands to access agent functionality.</p>
+      
+      <p>Characteristics of natural language interfaces include:</p>
+      <ul>
+        <li><strong>Language flexibility</strong>: Support for various natural language expressions, able to understand semantic variations and contextual information</li>
+        <li><strong>Personalized interaction</strong>: Ability to provide customized responses based on interaction history and user preferences</li>
+        <li><strong>Open-ended task processing</strong>: Suitable for task scenarios requiring creative thinking or complex reasoning</li>
+        <li><strong>Universality</strong>: It is recommended that all specification-compliant agents implement at least one natural language interface to ensure basic interoperability</li>
+      </ul>
+      
+      <h5>1.2.2 Structured Interface</h5>
+      
+      <p>Structured interfaces provide programmatic interaction methods based on predefined protocols and data formats. These interfaces follow standardized API design principles, ensuring predictability and efficiency.</p>
+      
+      <p>Characteristics of structured interfaces include:</p>
+      <ul>
+        <li><strong>Protocol standardization</strong>: Support for widely adopted protocol standards such as OpenAPI, JSON-RPC, GraphQL, WebRTC, etc.</li>
+        <li><strong>Type safety</strong>: Ensuring interaction correctness through explicit data type definitions and validation mechanisms</li>
+        <li><strong>Performance optimization</strong>: Compared to natural language interfaces, structured interfaces typically have lower latency and higher throughput</li>
+        <li><strong>Functional specialization</strong>: Each structured interface can be optimized for specific functional domains</li>
+      </ul>
+      
+      <h4>1.3 Interface Selection and Priority</h4>
+      
+      <p>Agents implementing the protocol should follow the following priority and selection strategies when choosing interaction interfaces:</p>
+      
+      <ol>
+        <li><strong>Structured interface priority principle</strong>: When there are structured interfaces that meet functional requirements, they should be prioritized for interaction to achieve optimal performance and reliability</li>
+        <li><strong>Functional completeness assessment</strong>: Before selecting an interface, it is necessary to evaluate whether the target interface can fully meet the functional requirements of the current task</li>
+        <li><strong>Fallback mechanism</strong>: When structured interfaces cannot meet complex or non-standardized requirements, fallback to natural language interfaces is acceptable</li>
+        <li><strong>Context-aware selection</strong>: Interface selection should consider task complexity, real-time requirements, and the degree of personalization needed</li>
+      </ol>
+      
+      <h3>2. Interaction Model</h3>
+      
+      <p>The protocol adopts a linked data-based interaction model that allows agents to organize their Information and Interfaces into a navigable data network through Uniform Resource Locators (URLs). This approach is similar to the hyperlink structure of the World Wide Web, enabling agents to construct their public data into a data network, where all data networks can be connected into an AI-accessible data network.</p>
+      
+      <h4>2.1 Networked Data Organization</h4>
+      
+      <p>The core principle of the interaction model is based on the following architectural design:</p>
+      
+      <h5>2.1.1 URL Link Network</h5>
+      
+      <p>Agents must use URLs as a unified addressing mechanism to organize their Information and Interface resources. Each URL points to a specific resource or interface definition, forming a traversable link graph. This design ensures:</p>
+      <ul>
+        <li><strong>Global uniqueness</strong>: Each resource has a unique network address</li>
+        <li><strong>Dereferencability</strong>: URLs can be directly used to access corresponding resources</li>
+        <li><strong>Link integrity</strong>: Relationships between resources are explicitly expressed through URL links</li>
+      </ul>
+      
+      <h5>2.1.2 Entry Point Mechanism</h5>
+      
+      <p>It is recommended that each agent provide a primary entry point, typically manifested as an Agent Description Document. This document functions similarly to a website's homepage and contains:</p>
+      <ul>
+        <li>Basic metadata and identification information of the agent</li>
+        <li>Links and descriptions of all available Information resources</li>
+        <li>Links and specification references for all available Interfaces</li>
+        <li>Necessary access control and security policy information</li>
+      </ul>
+      
+      <h4>2.2 Interaction Process</h4>
+      
+      <p>The interaction process between agents is similar to how web crawlers work, starting from an entry point and proceeding with recursive navigation. The client agent first obtains the target agent's description document URL, retrieves the document through an HTTP request, and then parses the Information resource links and Interface definition links contained within. Based on task requirements, the client agent selectively accesses relevant URL links. If the retrieved resources contain further links, it continues recursive retrieval until sufficient information needed to complete the task is collected.</p>
+      
+      <p>While gathering information, the client agent integrates this data in its local environment, formulates execution strategies, and selects appropriate Interfaces for invocation. The entire process emphasizes local decision processing, with sensitive information not passed to third parties but analyzed and processed locally at the client. Finally, the client agent executes specific operations through discovered Interfaces, processes return results, and completes tasks. This model ensures both privacy security and flexible on-demand information retrieval.</p>
+      
+      <h4>2.3 Architectural Advantages of the Interaction Model</h4>
+      
+      <h5>2.3.1 Compatibility with Existing Web Infrastructure</h5>
+      
+      <p>Fully leverages existing web technology stacks and infrastructure:</p>
+      <ul>
+        <li><strong>Protocol reuse</strong>: Based on HTTP/HTTPS protocols, compatible with existing network equipment and middleware</li>
+        <li><strong>Caching mechanisms</strong>: Supports standard web caching strategies, improving performance and scalability</li>
+        <li><strong>Search engine friendly</strong>: Information resources can be indexed by traditional search engines, enhancing agent discoverability</li>
+      </ul>
+      
+      <h5>2.3.2 Privacy Protection and Data Sovereignty</h5>
+      
+      <p>The local decision-making model provides important privacy protection advantages:</p>
+      <ul>
+        <li><strong>Data localization</strong>: Sensitive information is processed locally, reducing the risk of data leakage</li>
+        <li><strong>Selective sharing</strong>: Client agents can precisely control the scope of information shared with other agents</li>
+      </ul>
+      
+      
+      <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent description standards.</p>
+      
+    </section>
+
+    <section id="agent-discovery">
+      <h2>Agent Discovery</h2>
+      
+      <p>The core objective of the Agent Discovery module is to establish efficient agent discovery mechanisms, enabling agents to be conveniently found and accessed by other agents in different network environments, thereby building dynamic and open agent collaboration networks:</p>
+      
+      <ul>
+        <li><strong>Internet Discovery</strong>: Agents can register their services across the global internet and be found by other agents through standardized discovery protocols.</li>
+        <li><strong>Local Network Discovery</strong>: Agents can automatically broadcast and discover each other within local area networks, supporting agent collaboration within enterprises and private networks.</li>
+      </ul>
+      
+      <p>This specification defines the Agent Discovery Service Protocol (ADSP), a standardized protocol for discovering agents. Based on the JSON-LD format, it provides two discovery mechanisms: active discovery and passive discovery, aimed at enabling agents to be effectively discovered and accessed by other agents or search engines in the network.</p>
+      
+      <p>The core elements of the protocol include:</p>
+      <ol>
+        <li>Using JSON-LD as the foundational data format, supporting linked data and semantic web features</li>
+        <li>Defining an active discovery mechanism, using .well-known URI paths as agent discovery entry points</li>
+        <li>Providing a passive discovery mechanism, allowing agents to submit their descriptions to search services</li>
+        <li>Supporting pagination and linking of agent descriptions, facilitating the management of large numbers of agent information</li>
+      </ol>
+      
+      <section id="discovery-overview">
+        <h3>Overview</h3>
+        
+        <p>We use <a href="https://www.w3.org/TR/json-ld11/">JSON-LD</a> (JavaScript Object Notation for Linked Data) as the format for agent discovery documents, consistent with the Agent Description Protocol. By using JSON-LD, we can achieve rich semantic expression and linking relationships while maintaining simplicity and ease of use.</p>
+        
+        <p>Agent description documents are detailed expressions of agent information, as referenced in the Agent Description Protocol. The agent discovery document serves as a collection page, containing URLs of all public agent description documents under a domain, facilitating indexing and access by search engines or other agents.</p>
+      </section>
+      
+      <section id="active-discovery">
+        <h3>Active Discovery</h3>
+        
+        <p>Active discovery refers to search engines or agents only needing to know a domain to discover all public agent description documents under that domain. We adopt the Web standard <code>.well-known</code> URI path as the entry point for agent discovery.</p>
+        
+        <h4>.well-known URI</h4>
+        
+        <p>According to <a href="https://tools.ietf.org/html/rfc8615">RFC 8615</a>, <code>.well-known</code> URI provides a standardized way to discover services and resources. For agent discovery, we define the following path:</p>
+        
+        <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>https://{domain}/.well-known/agent-descriptions</code></pre>
+        
+        <p>This path should return a JSON-LD document containing URLs of all public agent description documents under the domain.</p>
+        
+        <h4>Discovery Document Format</h4>
+        
+        <p>Active discovery documents adopt the JSON-LD format, using the <code>CollectionPage</code> type, containing the following core properties:</p>
+        
+        <ul>
+          <li><code>@context</code>: Defines the JSON-LD context used in the document</li>
+          <li><code>@type</code>: Document type, value is "CollectionPage"</li>
+          <li><code>url</code>: URL of the current page</li>
+          <li><code>items</code>: Array of agent description items</li>
+          <li><code>next</code>: (Optional) URL of the next page, used for pagination scenarios</li>
+        </ul>
+        
+        <p>Each agent description item contains:</p>
+        <ul>
+          <li><code>@type</code>: Type, value is "ad:AgentDescription"</li>
+          <li><code>name</code>: Agent name</li>
+          <li><code>@id</code>: URL of the agent description document (unique identifier of the resource)</li>
+        </ul>
+        
+        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-left: 4px solid #fdcb6e; padding: 15px; margin: 20px 0;">
+          <h4 style="margin-top: 0; color: #856404;">EXAMPLE</h4>
+          <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "did": "https://w3id.org/did#",
+    "ad": "https://agent-network-protocol.com/ad#"
+  },
+  "@type": "CollectionPage",
+  "url": "https://agent-network-protocol.com/.well-known/agent-descriptions",
+  "items": [
+    {
+      "@type": "ad:AgentDescription",
+      "name": "Smart Assistant",
+      "@id": "https://agent-network-protocol.com/agents/smartassistant/ad.json"
+    },
+    {
+      "@type": "ad:AgentDescription",
+      "name": "Customer Support Agent",
+      "@id": "https://agent-network-protocol.com/agents/customersupport/ad.json"
+    }
+  ],
+  "next": "https://agent-network-protocol.com/.well-known/agent-descriptions?page=2"
+}</code></pre>
+        </div>
+        
+        <h4>Pagination Mechanism</h4>
+        
+        <p>When there are a large number of agents under a domain, a pagination mechanism should be adopted. Pagination is implemented through the <code>next</code> property, pointing to the URL of the next page. Clients should recursively retrieve all pages until there is no <code>next</code> property.</p>
+      </section>
+      
+      <section id="passive-discovery">
+        <h3>Passive Discovery</h3>
+        
+        <p>Passive discovery refers to agents actively submitting their agent description URLs to other agents (typically search service agents), enabling them to index and crawl their information.</p>
+        
+        <h4>Registration API</h4>
+        
+        <p>Passive discovery typically requires using the registration API provided by search service agents. These APIs are defined by the search service agents themselves and should be clearly stated in their agent description documents. Agents can register their description URLs with search services by calling these APIs.</p>
+        
+        <h4>Registration Process</h4>
+        
+        <ol>
+          <li>Agent obtains the description document of the search service agent</li>
+          <li>Finds the registration API endpoint and parameter requirements from the description document</li>
+          <li>Constructs a registration request, including its own agent description URL and other necessary information</li>
+          <li>Sends the registration request to the search service</li>
+          <li>Search service verifies the request and indexes the agent</li>
+        </ol>
+        
+        <figure style="margin: 16px 0;">
+          <pre style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 16px; margin: 0; overflow-x: auto;"><code>sequenceDiagram
+    participant Agent as Agent
+    participant Search as Search Service Agent
+    
+    Agent->>Search: Get agent description document
+    Search-->>Agent: Return description document (including registration API info)
+    Note over Agent: Parse registration API from description document
+    Agent->>Search: Send registration request (including own description URL)
+    Note over Search: Verify request
+    Search-->>Agent: Confirm registration
+    Note over Search: Crawl agent description document and index</code></pre>
+          <figcaption style="text-align: center; color: #555;">Passive Discovery Registration Process</figcaption>
+        </figure>
+      </section>
+      
+      <section id="discovery-security">
+        <h3>Security Considerations</h3>
+        
+        <p>To ensure the security of agent discovery, the following measures are recommended:</p>
+        
+        <ol>
+          <li><strong>Content Validation</strong>: Search services should verify the validity and integrity of agent description documents</li>
+          <li><strong>DID Authentication</strong>: Use the did:wba method for identity authentication, ensuring the authenticity of agent identities</li>
+          <li><strong>Rate Limiting</strong>: Implement appropriate rate limiting measures to prevent malicious requests and DoS attacks</li>
+          <li><strong>Permission Control</strong>: Distinguish between public and private agents, only including public agents in discovery documents</li>
+        </ol>
+      </section>
+      
+      <section id="discovery-relationships">
+        <h3>Relationship with Other Protocols</h3>
+        
+        <p>The Agent Discovery Protocol is closely related to the following protocols:</p>
+        
+        <ol>
+          <li><strong>Agent Description Protocol</strong>: The discovery protocol provides indexing and access mechanisms for description documents</li>
+          <li><strong>DID:WBA Method</strong>: Provides identity authentication and security guarantees</li>
+          <li><strong>Meta-Protocol</strong>: In agent communication, protocol negotiation can be based on discovery results</li>
+        </ol>
+      </section>
+      
+      <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent discovery standards.</p>
+      
+    </section>
+
+    <section id="security-considerations">
+      <h2>Security Considerations</h2>
+      
+      <p>The core objective of the Security Considerations module is to ensure the security of agents during interactions, establish multi-layered security protection systems, and maximize defense against various security threats and malicious attacks:</p>
+      
+      <ul>
+        <li><strong>Authentication and Authorization</strong>: Ensure that agents participating in interactions have authentic and trustworthy identities, establish fine-grained permission control mechanisms, and prevent identity forgery and unauthorized access.</li>
+        <li><strong>Communication Encryption</strong>: Apply end-to-end encryption to all communication data between agents, ensuring that data transmission is not subject to eavesdropping, tampering, or replay attacks.</li>
+        <li><strong>Data Integrity Protection</strong>: Use technologies such as digital signatures and message authentication codes to ensure the integrity and authenticity of interaction data, preventing malicious data modification.</li>
+        
+      </ul>
+      
+      <p>Therefore, agent security protocols must adopt defense-in-depth strategies, establishing corresponding security protection measures at the network layer, application layer, and data layer.</p>
+      
+      <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent security standards.</p>
+      
+    </section>
+
+    <section id="privacy-considerations">
+      <h2>Privacy Considerations</h2>
+      
+      <p>The core objective of the Privacy Considerations module is to maximize the protection of personal privacy during agent interactions, ensuring that users' sensitive information is not improperly transmitted or leaked between agents, and establishing privacy-first interaction mechanisms:</p>
+      
+      <ul>
+        <li><strong>Data Minimization Principle</strong>: Agents only transmit the minimum information necessary to complete tasks during interactions, avoiding unnecessary personal data sharing.</li>
+        <li><strong>Data Desensitization and Anonymization</strong>: When transmitting information between agents, personal privacy data undergoes desensitization, anonymization, or pseudonymization processing to protect users' real identities.</li>
+        <li><strong>User Authorization Control</strong>: Establish clear user authorization mechanisms, ensuring that any cross-agent transmission of personal data requires explicit user consent and authorization.</li>
+      </ul>
+      
+      <p>Therefore, agent privacy protocols must make privacy protection a fundamental design principle, ensuring that technological progress does not come at the expense of user privacy.</p>
+      
+      <p class="note">Note: This section is being continuously refined. We sincerely invite community members to contribute and jointly improve the technical specifications and implementation solutions for agent privacy protection standards.</p>
+      
+    </section>
+    
+    <section id="references">
+      <h2>References</h2>
+      <ol>
+        <li id="RFC2119">[RFC2119] Key words for use in RFCs to Indicate Requirement Levels. S. Bradner. IETF. March 1997. Best Current Practice. URL: <a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a></li>
+        <li id="RFC8174">[RFC8174] Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words. B. Leiba. IETF. May 2017. Best Current Practice. URL: <a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a></li>
+
+      </ol>
+    </section>
+
+  </body>
+</html>
