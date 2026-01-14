@@ -173,8 +173,132 @@
 
       <li><strong>Agent Capability Invocation</strong>: Based on identity, description, and discovery mechanisms, establish a universal invocation mechanism that supports one agent calling the services or interfaces exposed by another agent, enabling task delegation, process orchestration, and cross-agent collaborative operations. The invocation process needs to cover a complete loop including interface discovery, parameter passing, permission verification, and execution feedback, ensuring the accuracy, security, and auditability of the invocation.</li>
     </ul>
-  </section>
   
+  <section>
+    <h4>Design Principles for Agent Identity Mechanisms</h4>
+    
+    <p>As discussed in Chapter 3 of this paper, the "data silo" phenomenon in the current internet severely constrains the decision quality and collaboration efficiency of agents. Without standardized identity authentication mechanisms, agents cannot establish trusted connections, and cross-platform information flow and collaboration become impossible. Therefore, the design of agent identity mechanisms is not only a technical requirement but also a key foundation for realizing the vision of "universal interconnection between agents" described in Chapter 2. To this end, the design of agent identity mechanisms should follow these core principles:</p>
+    
+    <p><strong>Layered Design of Authentication and Authorization</strong>: Agent identity mechanisms should first focus on addressing the fundamental problem of "authentication"—that is, reliably confirming the identity of agents through cryptographic means. Cryptographic identity based on public-private key systems is the foundation of the entire trust chain and the starting point for all subsequent interactions and authorizations. On the basis of reliable authentication, higher-level requirements such as authorization and permission management can be flexibly extended through various mechanisms, such as access tokens for session-level authorization, or Verifiable Credentials (VCs) for fine-grained attribute proofs and permission claims. It must be emphasized that regardless of the authorization mechanism adopted, the cryptographic identity holder is always the subject of authorization—the issuance and authorization of tokens must be traceable to the original cryptographic identity, ensuring the integrity and verifiability of the authorization chain. This layered design gives the identity mechanism good extensibility—core identity verification remains simple and reliable, while authorization strategies can be customized according to specific application scenarios.</p>
+    
+    <p><strong>Federated Identity Architecture</strong>: A viable agent identity scheme should draw on the successful experience of email systems—each platform can manage its own account system in a centralized manner, while achieving cross-platform interconnection through standard protocols. The core of this federated architecture lies in adopting a Web DID-like approach: each platform internally manages agent accounts and keys in a centralized manner, but externally publishes distributed identity documents through web hosting in a unified manner, enabling external agents to obtain trusted identity verification evidence through standardized resolution processes. Just as email systems allow Gmail users to send emails to Outlook users, agent identity mechanisms should support mutual identification and authentication between agents on different platforms. This design means that existing centralized identifier systems do not need to be completely restructured—simply adding standardized identity document hosting and publishing mechanisms on top of existing systems enables cross-system interoperability. This design significantly lowers the threshold for technical implementation, helps promote wide adoption of agent network protocols, and prevents the Agentic Web from falling into the "fragmentation" trap warned about in Chapter 3 of this paper.</p>
+    
+    <p><strong>Efficient Cross-Platform Authentication Process</strong>: In cross-platform interaction scenarios between agents, identity authentication mechanisms should minimize interaction rounds to reduce collaboration costs and improve efficiency. Ideally, agents should be able to complete verification by carrying identity identifiers and digital signatures in their first request, without requiring additional handshakes or multiple confirmation rounds. After successful verification, the server can return an access token, and subsequent interactions only need to verify the token, avoiding repeated identity verification overhead. This "verify-on-first-request" design pattern is crucial for achieving the "efficient collaboration" goal stated in Section 4.1 of this paper, especially in scenarios where agents need to frequently interact with multiple servers, significantly reducing latency and improving overall collaboration efficiency.</p>
+    
+    <p><strong>Mutual Authentication</strong>: In agent interaction scenarios, in addition to server-side verification of client identity, clients may also need to verify the identity of server-side agents. Although the HTTPS protocol already provides domain-name-based server identity verification through TLS certificates, DID-based mutual authentication mechanisms can provide additional value: on one hand, DID authentication can be precise to specific agent entities, rather than just verifying domain ownership; on the other hand, this mechanism allows clients and servers to use consistent, decentralized identity verification methods that do not rely on traditional CA systems. In implementation, the server can return its DID identifier and corresponding signature in the response, and the client can use this to verify the true identity of the server-side agent. It should be noted that DID-level mutual authentication and transport layer security (TLS) are complementary rather than substitutes—the former provides decentralized fine-grained identity assurance at the application layer, while the latter provides communication security and basic domain name identity verification at the transport layer.</p>
+    
+    <p><strong>Tiered Authorization Mechanism</strong>: As stated in Section 4.3 of this paper, agent network protocols should support "human-in-the-loop" observability requirements. Identity and authorization mechanisms should be able to distinguish between automatic agent authorization and human manual authorization scenarios. For routine, low-risk operations (such as querying public information, accessing already authorized services), agents can automatically complete authorization on behalf of users; while for requests involving important resources or sensitive operations (such as payments, signing agreements, accessing private data), human confirmation processes should be supported. This tiered mechanism ensures that humans retain ultimate control over critical decisions, achieving a balance between agent automation and user security, and is an important safeguard for building a trustworthy Agentic Web.</p>
+    
+    <p><strong>Privacy-Preserving Design</strong>: As emphasized in Section 4.3 of this paper, protocol design should embed privacy protection mechanisms to avoid unnecessary data exposure. At the identity level, this means supporting a "multi-identity strategy"—that is, a user or agent can have multiple independent identity identifiers for different scenarios (such as maintaining social relationships, daily shopping, service subscriptions, etc.), with each identity isolated from the others to prevent third parties from tracking users' complete behavioral trajectories through identity correlation. Additionally, identity identifiers should support periodic replacement or temporary identity generation to further enhance privacy protection capabilities. This design enables users to maintain control over their personal data while enjoying the convenience of agent networks, complies with relevant privacy regulations, and is a necessary condition for realizing the "open network" vision described in Chapter 7 of this paper—a truly open network should give users the power of choice, rather than trading privacy for interconnection.</p>
+  </section>
+
+  <section>
+    <h4>DID-Based Identity: A Reference Implementation Approach</h4>
+
+    <p>The design principles outlined above establish the requirements for agent identity mechanisms. This section presents Decentralized Identifiers (DIDs), specifically the Web-Based Agent DID method (did:wba), as a reference implementation approach that addresses these requirements while overcoming limitations of traditional authentication schemes.</p>
+
+    <section>
+      <h5>Why Traditional Approaches Fall Short for Agent Networks</h5>
+
+      <p>Agent networks present a unique challenge: agents from different platforms must establish trust <strong>dynamically</strong>, often without any pre-existing relationship. Traditional authentication approaches were not designed for this scenario:</p>
+
+      <p><strong>OAuth Limitations</strong>: OAuth 2.0 assumes the existence of a trusted authorization server that both parties recognize. In multi-platform agent scenarios, this creates significant challenges:</p>
+      <ul>
+        <li>For Platform X's agent to access Platform Y's agent, either Platform Y must pre-register Platform X as a trusted OAuth client, or both must trust a common identity provider.</li>
+        <li>For N platforms to interoperate freely, this requires either O(N²) bilateral trust agreements or dependence on a dominant centralized identity provider—neither of which scales well or preserves decentralization.</li>
+        <li>New platforms face a "cold start" problem: they cannot participate until they establish OAuth relationships with existing platforms.</li>
+      </ul>
+
+      <p><strong>Traditional PKI Limitations</strong>: While PKI provides strong cryptographic guarantees, it has limitations for agent identity:</p>
+      <ul>
+        <li>TLS certificates verify <strong>domain ownership</strong>, not individual agent identity. Multiple agents on the same domain share a single certificate.</li>
+        <li>PKI is designed for transport-layer security, not application-layer identity verification between peer agents.</li>
+        <li>Cross-domain certificate verification relies on centralized Certificate Authority (CA) trust chains.</li>
+        <li>Certificate management overhead is high for dynamic ecosystems where agents are frequently created and retired.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h5>How DID Addresses These Gaps</h5>
+
+      <p>W3C Decentralized Identifiers (DIDs) [[DID-CORE]] provide a foundation for agent identity that addresses the limitations above:</p>
+
+      <ul>
+        <li><strong>Self-Sovereign Identity</strong>: Each agent has its own cryptographic identity (public-private key pair) that it controls, independent of any central authority.</li>
+        <li><strong>Self-Hosted Identity Documents</strong>: DID documents containing public keys are hosted on the agent's own domain, eliminating dependence on third-party identity providers.</li>
+        <li><strong>Direct Verification</strong>: Any agent can verify another agent's identity by fetching its DID document and verifying cryptographic signatures—no pre-established relationship required.</li>
+        <li><strong>Federated Architecture</strong>: Like email, each platform manages its own accounts centrally while achieving cross-platform interoperability through standard protocols.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h5>The Web-Based Agent DID Method (did:wba)</h5>
+
+      <p>The did:wba method extends the did:web specification specifically for agent communication scenarios. It inherits the simplicity of web-based DIDs while adding cross-platform authentication processes optimized for agent interactions.</p>
+
+      <p><strong>Key Characteristics</strong>:</p>
+      <ul>
+        <li><strong>No Blockchain Required</strong>: Unlike did:btc, did:ethr, or did:ion, did:wba uses standard web infrastructure (DNS, HTTPS, web servers). This eliminates blockchain scalability concerns and reduces deployment complexity.</li>
+        <li><strong>Familiar URL-Based Resolution</strong>: A DID like <code>did:wba:example.com:user:alice</code> resolves to <code>https://example.com/user/alice/did.json</code>—a simple JSON document hosted on a standard web server.</li>
+        <li><strong>Single-Request Authentication</strong>: Agents include their DID and a cryptographic signature in the first HTTP request. The server fetches the DID document, verifies the signature, and returns an access token—all in a single round-trip.</li>
+        <li><strong>Tiered Authorization Support</strong>: DID documents can include separate verification methods for routine agent operations versus sensitive operations requiring human authorization (humanAuthorization), supporting the tiered authorization principle described earlier.</li>
+      </ul>
+
+      <p><strong>Authentication Flow</strong>:</p>
+      <ol>
+        <li>Client agent includes its DID and signature in the HTTP Authorization header of the first request.</li>
+        <li>Server fetches the client's DID document from the client's domain (e.g., <code>https://client-domain.com/agent/did.json</code>).</li>
+        <li>Server verifies the signature using the public key from the DID document.</li>
+        <li>Upon successful verification, server returns an access token for subsequent requests.</li>
+        <li>Result: Cross-platform authentication completed in a single round-trip, with no pre-registration required.</li>
+      </ol>
+
+      <figure>
+        <img src="anp-did/images/cross-platform-authentication.png" alt="Cross-platform authentication flow using DID" style="max-width: 80%; height: auto;">
+        <figcaption>Figure 1: Cross-platform authentication flow showing how agents use DID for single-request authentication without pre-registration</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h5>Practical Scenario: Multi-Platform Agent Collaboration</h5>
+
+      <p>Consider a travel booking scenario where a user's personal agent (Platform A) needs to coordinate with multiple service agents:</p>
+      <ul>
+        <li>Query hotel availability from a hotel agent (Platform B)</li>
+        <li>Book flights through an airline agent (Platform C)</li>
+        <li>Arrange car rental via a rental agency agent (Platform D)</li>
+      </ul>
+
+      <p><strong>With OAuth</strong>: Platform A would need to be pre-registered as an OAuth client with Platforms B, C, and D—or all platforms would need to trust a common identity provider (creating centralization). Adding a new travel service platform would require establishing new OAuth relationships before any collaboration could occur.</p>
+
+      <p><strong>With DID</strong>: Each agent simply hosts a DID document on its domain. Platform A's agent can immediately verify and interact with agents on Platforms B, C, and D by fetching their DID documents and verifying signatures. New platforms can join the ecosystem simply by hosting DID documents—no bilateral agreements or central coordination required. This enables the "universal interconnection between agents" vision described in Chapter 2.</p>
+
+      <figure>
+        <img src="images/anp-information-interact.png" alt="Multi-platform agent information interaction" style="max-width: 80%; height: auto;">
+        <figcaption>Figure 2: Information interaction between agents across multiple platforms, demonstrating decentralized collaboration without pre-established trust relationships</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h5>Addressing Adoption Concerns</h5>
+
+      <p>A common concern is that DID introduces unfamiliar concepts and learning overhead. However, did:wba is designed to minimize this barrier:</p>
+
+      <p><strong>Conceptual Simplicity</strong>: At its core, a DID is simply "domain + path + public key." The format mirrors familiar patterns:</p>
+      <ul>
+        <li>Email: <code>alice@example.com</code></li>
+        <li>DID: <code>did:wba:example.com:user:alice</code></li>
+      </ul>
+
+      <p><strong>Incremental Adoption</strong>: Existing systems do not require restructuring. Organizations can add DID document hosting alongside their existing authentication mechanisms, enabling gradual migration. The DID document is simply a JSON file served over HTTPS—no special infrastructure required.</p>
+
+      <p><strong>Familiar Building Blocks</strong>: did:wba uses technologies web developers already know: HTTP, JSON, public-key cryptography, and DNS. The authentication flow resembles API key authentication, with the added benefit of cryptographic verification.</p>
+
+      <p><strong>Tooling Availability</strong>: Reference implementations and libraries are available for common programming languages, reducing implementation effort.</p>
+    </section>
+  </section>
+  </section>
+
   <section>
     <h3>Key Non-Functional Requirements for Agent Network Protocols</h3>
     
@@ -244,10 +368,15 @@
           <li><strong>Meta-Protocol Layer</strong>: A protocol for negotiating communication protocols between agents, key to enabling self-organization and self-negotiation for efficient collaboration in agent networks.</li>
           <li><strong>Application Protocol Layer</strong>: Based on Semantic Web specifications, using JSON-LD and schema.org to describe agent information, capabilities, and interfaces. The entry point for an agent is an Agent Description Document. Uses RFC 8615 to design agent discovery mechanisms, W3C VC to implement credential records for transactions between agents, while reusing many existing specifications such as OpenAPI, WebRTC, etc.</li>
         </ol>
+
+        <figure>
+          <img src="anp-did/images/anp-flow.png" alt="ANP protocol architecture and flow" style="max-width: 80%; height: auto;">
+          <figcaption>Figure 3: ANP three-layer protocol architecture showing the identity layer, meta-protocol layer, and application protocol layer with their interactions</figcaption>
+        </figure>
       </li>
-      
+
       <li><strong>Focus Areas/Target Challenges</strong>: ANP aims to address three core challenges of the agent internet: achieving interconnection between all agents, breaking data silos, and ensuring AI can access complete contextual information; providing AI-native interfaces for efficient interaction with the digital world through APIs or communication protocols rather than mimicking human operations; and utilizing AI for automatic organization and negotiation between agents to build a more economically efficient collaborative network. It particularly focuses on decentralized discovery and collaboration in open internet environments, as well as interoperability across heterogeneous domains.</li>
-      
+
       <li><strong>Core Technologies Used</strong>: W3C Decentralized Identifiers (DIDs), JSON-LD, W3C Verifiable Credentials (VC), end-to-end encryption technologies.</li>
     </ul>
   </section>
@@ -428,19 +557,22 @@
   <section>
     <h2>References</h2>
     <ol>
-      <li id="ref1"><a href="https://www.scientificamerican.com/article/the-semantic-web/" target="_blank">Tim Berners-Lee, James Hendler and Ora Lassila. The Semantic Web. Scientific American, 2001.</a></li>
-      <li id="ref2"><a href="https://arxiv.org/html/2503.20793v1" target="_blank">Semantic Web – A Forgotten Wave of Artificial Intelligence?</a></li>
-      <li id="ref3"><a href="https://arxiv.org/abs/2504.16736" target="_blank">The Agentic Web: A Paradigm Shift in Web Architecture for an LLM-powered Internet</a></li>
-      <li id="ref4"><a href="https://arxiv.org/html/2504.21030v1" target="_blank">LLM Agents Architecture: A Survey</a></li>
-      <li id="ref5"><a href="https://outshift.cisco.com/blog/building-multi-agent-marketing-campaign-agntcy" target="_blank">Building Multi-Agent Marketing Campaign with AGNTCY</a></li>
-      <li id="ref6"><a href="https://github.com/agent-network-protocol/AgentNetworkProtocol/blob/main/01-agentnetworkprotocol-technical-white-paper.md" target="_blank">Agent Network Protocol Technical White Paper</a></li>
-      <li id="ref7"><a href="https://github.com/agent-network-protocol/AgentNetworkProtocol" target="_blank">Github: AgentNetworkProtocol</a></li>
-      <li id="ref8"><a href="https://google.github.io/A2A/specification/" target="_blank">Agent-to-Agent (A2A) Protocol Specification</a></li>
-      <li id="ref9"><a href="https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/" target="_blank">A2A: A new era of agent interoperability</a></li>
-      <li id="ref10"><a href="https://outshift.cisco.com/blog/mcp-acp-decoding-language-of-models-and-agents" target="_blank">MCP & ACP: Decoding the Language of Models and Agents</a></li>
-      <li id="ref11"><a href="https://modelcontextprotocol.io/specification/2025-03-26" target="_blank">Model Context Protocol (MCP)</a></li>
-      <li id="ref12"><a href="https://github.com/agntcy/acp-spec" target="_blank">Agent Connect Protocol (ACP) Specification - AGNTCY</a></li>
-      <li id="ref13"><a href="https://agentcommunicationprotocol.dev/introduction/welcome" target="_blank">Agent Communication Protocol (ACP) - Introduction</a></li>
+      <li id="ref1"><a href="https://www.scientificamerican.com/article/the-semantic-web/" target="_blank" rel="noopener">Tim Berners-Lee, James Hendler and Ora Lassila. The Semantic Web. Scientific American, 2001.</a></li>
+      <li id="ref2"><a href="https://arxiv.org/html/2503.20793v1" target="_blank" rel="noopener">Semantic Web – A Forgotten Wave of Artificial Intelligence?</a></li>
+      <li id="ref3"><a href="https://arxiv.org/abs/2504.16736" target="_blank" rel="noopener">The Agentic Web: A Paradigm Shift in Web Architecture for an LLM-powered Internet</a></li>
+      <li id="ref4"><a href="https://arxiv.org/html/2504.21030v1" target="_blank" rel="noopener">LLM Agents Architecture: A Survey</a></li>
+      <li id="ref5"><a href="https://outshift.cisco.com/blog/building-multi-agent-marketing-campaign-agntcy" target="_blank" rel="noopener">Building Multi-Agent Marketing Campaign with AGNTCY</a></li>
+      <li id="ref6"><a href="https://github.com/agent-network-protocol/AgentNetworkProtocol/blob/main/01-agentnetworkprotocol-technical-white-paper.md" target="_blank" rel="noopener">Agent Network Protocol Technical White Paper</a></li>
+      <li id="ref7"><a href="https://github.com/agent-network-protocol/AgentNetworkProtocol" target="_blank" rel="noopener">Github: AgentNetworkProtocol</a></li>
+      <li id="ref8"><a href="https://google.github.io/A2A/specification/" target="_blank" rel="noopener">Agent-to-Agent (A2A) Protocol Specification</a></li>
+      <li id="ref9"><a href="https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/" target="_blank" rel="noopener">A2A: A new era of agent interoperability</a></li>
+      <li id="ref10"><a href="https://outshift.cisco.com/blog/mcp-acp-decoding-language-of-models-and-agents" target="_blank" rel="noopener">MCP & ACP: Decoding the Language of Models and Agents</a></li>
+      <li id="ref11"><a href="https://modelcontextprotocol.io/specification/2025-03-26" target="_blank" rel="noopener">Model Context Protocol (MCP)</a></li>
+      <li id="ref12"><a href="https://github.com/agntcy/acp-spec" target="_blank" rel="noopener">Agent Connect Protocol (ACP) Specification - AGNTCY</a></li>
+      <li id="ref13"><a href="https://agentcommunicationprotocol.dev/introduction/welcome" target="_blank" rel="noopener">Agent Communication Protocol (ACP) - Introduction</a></li>
+      <li id="ref14"><a href="https://www.w3.org/TR/did-core/" target="_blank" rel="noopener">Decentralized Identifiers (DIDs) v1.0. W3C Recommendation, 19 July 2022.</a></li>
+      <li id="ref15"><a href="https://w3c-ccg.github.io/did-method-web/" target="_blank" rel="noopener">did:web Method Specification. W3C Credentials Community Group.</a></li>
+
     </ol>
   </section>
 
