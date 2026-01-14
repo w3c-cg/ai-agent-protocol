@@ -178,8 +178,114 @@
     
     <p><strong>隐私保护设计</strong>：如本文第4.3节所强调，协议设计应内嵌隐私保护机制，避免不必要的数据暴露。在身份层面，这意味着应支持"多身份策略"——即一个用户或智能体可拥有多个独立的身份标识，分别用于不同场景（如社交关系维护、日常购物、服务订阅等），各身份之间相互隔离，防止第三方通过身份关联追踪用户的完整行为轨迹。此外，身份标识应支持周期性更换或临时身份生成，以进一步增强隐私保护能力。这种设计使用户能够在享受智能体网络便利的同时，保持对个人数据的控制权，符合相关隐私法规的要求，也是实现本文第七章所描述的"开放网络"愿景的必要条件——真正的开放网络应赋予用户选择权，而非以牺牲隐私为代价换取互联互通。</p>
   </section>
+
+  <section>
+    <h4>基于 DID 的身份认证：参考实现方案</h4>
+
+    <p>上述设计原则确立了智能体身份机制的需求。本节介绍去中心化标识符（DID），特别是基于 Web 的智能体 DID 方法（did:wba），作为满足这些需求的参考实现方案，同时克服了传统认证方案的局限性。</p>
+
+    <section>
+      <h5>传统方案在智能体网络中的局限性</h5>
+
+      <p>智能体网络面临一个独特挑战：来自不同平台的智能体必须<strong>动态地</strong>建立信任，通常没有任何预先存在的关系。传统认证方案并非为此场景设计：</p>
+
+      <p><strong>OAuth 的局限性</strong>：OAuth 2.0 假设存在一个双方都认可的可信授权服务器。在多平台智能体场景中，这造成了重大挑战：</p>
+      <ul>
+        <li>平台 X 的智能体要访问平台 Y 的智能体，要么平台 Y 必须预先将平台 X 注册为可信的 OAuth 客户端，要么双方必须信任一个共同的身份提供商。</li>
+        <li>对于 N 个平台自由互操作，这需要 O(N²) 双边信任协议或依赖单一主导身份提供商——两��都无法很好地扩展或保持去中心化。</li>
+        <li>新平台面临"冷启动"问题：在与现有平台建立 OAuth 关系之前无法参与。</li>
+      </ul>
+
+      <p><strong>传统 PKI 的局限性</strong>：虽然 PKI 提供了强大的密码学保证，但在智能体身份方面存在局限：</p>
+      <ul>
+        <li>TLS 证书验证<strong>域名所有权</strong>，而非单个智能体身份。同一域名上的多个智能体共享同一证书。</li>
+        <li>PKI 设计用于传输层安全，而非对等智能体之间的应用层身份验证。</li>
+        <li>跨域证书验证依赖于中心化的证书颁发机构（CA）信任链。</li>
+        <li>对于频繁创建和退役智能体的动态生态系统，证书管理开销很高。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h5>DID 如何解决这些问题</h5>
+
+      <p>W3C 去中心化标识符（DIDs）[[DID-CORE]] 为智能体身份提供了解决上述局限的基础：</p>
+
+      <ul>
+        <li><strong>自主身份</strong>：每个智能体拥有自己的密码学身份（公私钥对），由其自主控制，独立于任何中心化机构。</li>
+        <li><strong>自托管身份文档</strong>：包含公钥的 DID 文档托管在智能体自己的域名上，消除了对第三方身份提供商的依赖。</li>
+        <li><strong>直接验证</strong>：任何智能体都可以通过获取其 DID 文档并验证密码学签名来验证另一个智能体的身份——无需预先建立的关系。</li>
+        <li><strong>联邦式架构</strong>：类似电子邮件，每个平台以中心化方式管理自己的账户，同时通过标准协议实现跨平台互操作性。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h5>基于 Web 的智能体 DID 方法（did:wba）</h5>
+
+      <p>did:wba 方法扩展了 did:web 规范，专门针对智能体通信场景。它继承了基于 Web 的 DID 的简洁性，同时添加了针对智能体交互优化的跨平台认证流程。</p>
+
+      <p><strong>关键特性</strong>：</p>
+      <ul>
+        <li><strong>无需区块链</strong>：与 did:btc、did:ethr 或 did:ion 不同，did:wba 使用标准 Web 基础设施（DNS、HTTPS、Web 服务器）。这消除了区块链可扩展性问题，降低了部署复杂性。</li>
+        <li><strong>熟悉的基于 URL 的解析</strong>：像 <code>did:wba:example.com:user:alice</code> 这样的 DID 解析为 <code>https://example.com/user/alice/did.json</code>——一个托管在标准 Web 服务器上的简单 JSON 文档。</li>
+        <li><strong>单次请求认证</strong>：智能体在首次 HTTP 请求中包含其 DID 和密码学签名。服务器获取 DID 文档，验证签名，并返回访问令牌——全部在单次往返中完成。</li>
+        <li><strong>分级授权支持</strong>：DID 文档可以包含用于常规智能体操作与需要人工授权的敏感操作（humanAuthorization）的独立验证方法，支持前面描述的分级授权原则。</li>
+      </ul>
+
+      <p><strong>认证流程</strong>：</p>
+      <ol>
+        <li>客户端智能体在首次请求的 HTTP Authorization 头中包含其 DID 和签名。</li>
+        <li>服务器从客户端的域名获取客户端的 DID 文档（例如，<code>https://client-domain.com/agent/did.json</code>）。</li>
+        <li>服务器使用 DID 文档中的公钥验证签名。</li>
+        <li>验证成功后，服务器返回用于后续请求的访问令牌。</li>
+        <li>结果：跨平台认证在单次往返中完成，无需预先注册。</li>
+      </ol>
+
+      <figure>
+        <img src="anp-did/images/cross-platform-authentication.png" alt="使用 DID 的跨平台认证流程" style="max-width: 80%; height: auto;">
+        <figcaption>图1：跨平台认证流程，展示智能体如何使用 DID 实现单次请求认证，无需预先注册</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h5>实际场景：多平台智能体协作</h5>
+
+      <p>考虑一个旅行预订场景，用户的个人智能体（平台 A）需要与多个服务智能体协调：</p>
+      <ul>
+        <li>向酒店智能体（平台 B）查询可用性</li>
+        <li>通过航空公司智能体（平台 C）预订航班</li>
+        <li>通过租车公司智能体（平台 D）安排租车</li>
+      </ul>
+
+      <p><strong>使用 OAuth</strong>：平台 A 需要预先注册为平台 B、C 和 D 的 OAuth 客户端——或者所有平台需要信任一个共同的身份提供商（造成中心化）。添加新的旅行服务平台需要在任何协作发生之前建立新的 OAuth 关系。</p>
+
+      <p><strong>使用 DID</strong>：每个智能体只需在其域名上托管 DID 文档。平台 A 的智能体可以立即验证并与平台 B、C 和 D 上的智能体交互，通过获取其 DID 文档并验证签名。新平台只需托管 DID 文档即可加入生态系统——无需双边协议或中心协调。这实现了第二章描述的"智能体间普遍互联互通"愿景。</p>
+
+      <figure>
+        <img src="anp-did/images/anp-information-interact.png" alt="跨多个平台的智能体信息交互" style="max-width: 80%; height: auto;">
+        <figcaption>图2：跨多个平台的智能体信息交互，展示无需预先建立信任关系的去中心化协作</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h5>解决采用顾虑</h5>
+
+      <p>一个常见的顾虑是 DID 引入了不熟悉的概念和学习开销。然而，did:wba 旨在最小化这一障碍：</p>
+
+      <p><strong>概念简单性</strong>：从本质上讲，DID 只是"域名 + 路径 + 公钥"。格式类似于熟悉的模式：</p>
+      <ul>
+        <li>电子邮件：<code>alice@example.com</code></li>
+        <li>DID：<code>did:wba:example.com:user:alice</code></li>
+      </ul>
+
+      <p><strong>渐进式采用</strong>：现有系统无需重构。组织可以在现有认证机制的基础上添加 DID 文档托管，实现渐进式迁移。DID 文档只是通过 HTTPS 提供的 JSON 文件——无需特殊基础设施。</p>
+
+      <p><strong>熟悉的技术栈</strong>：did:wba 使用 Web 开发者已经熟悉的技术：HTTP、JSON、公钥密码学和 DNS。认证流程类似于 API 密钥认证，但增加了密码学验证的好处。</p>
+
+      <p><strong>工具可用性</strong>：常见编程语言都有参考实现和库可用，降低了实现工作量。</p>
+    </section>
   </section>
-  
+  </section>
+
   <section>
     <h3>4.3 智能体网络协议的关键非功能性需求</h3>
     
@@ -249,8 +355,13 @@
           <li><strong>元协议层</strong>：一个用于智能体之间协商通信协议的协议，是实现智能体网络自组织、自协商高效协作的关键。</li>
           <li><strong>应用协议层</strong>：基于语义网规范，使用JSON-LD和schema.org描述智能体的信息、能力和接口，智能体的入口点是一个智能体描述文档（Agent Description Document）。使用RFC 8615设计智能体发现机制，使用W3C VC实现智能体之间交易的凭证记录，同时复用现有的很多规范比如OpenAPI、Webrtc等。</li>
         </ol>
+
+      <figure>
+        <img src="anp-did/images/anp-flow.png" alt="ANP 三层协议架构" style="max-width: 80%; height: auto;">
+        <figcaption>图3：ANP 三层协议架构，展示身份层、元协议层和应用协议层及其交互</figcaption>
+      </figure>
       </li>
-      
+
       <li><strong>关注点/目标挑战</strong>：ANP旨在解决智能体互联网的三大核心挑战：实现所有智能体间的互联互通，打破数据孤岛，确保AI能获取完整上下文信息；提供AI原生接口，使AI能通过API或通信协议与数字世界高效交互，而非模仿人类操作；以及利用AI实现智能体间的自动组织和自动协商，构建更经济高效的协作网络。它特别关注开放互联网环境下的去中心化发现与协作，以及跨异构域的互操作性。</li>
       
       <li><strong>使用核心技术</strong>：W3C去中心化标识符（DIDs），JSON-LD，W3C 可验证凭证（VC），端到端加密技术。</li>
@@ -437,6 +548,8 @@
       <li id="ref9"><a href="https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/" target="_blank">A2A: A new era of agent interoperability</a></li>
       <li id="ref10"><a href="https://outshift.cisco.com/blog/mcp-acp-decoding-language-of-models-and-agents" target="_blank">MCP & ACP: Decoding the Language of Models and Agents</a></li>
       <li id="ref11"><a href="https://modelcontextprotocol.io/specification/2025-03-26" target="_blank">Model Context Protocol (MCP)</a></li>
+      <li id="ref12"><a href="https://www.w3.org/TR/did-core/" target="_blank">去中心化标识符 (DIDs) v1.0. W3C 推荐标准, 2022年7月19日.</a></li>
+      <li id="ref13"><a href="https://w3c-ccg.github.io/did-method-web/" target="_blank">did:web 方法规范. W3C 凭证社区组.</a></li>
     </ol>
   </section>
 
