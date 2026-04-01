@@ -6,6 +6,14 @@
 
 ---
 
+## Conformance
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119).
+
+Implementations claiming conformance with this specification MUST implement all requirements marked MUST and REQUIRED. Requirements marked SHOULD are strongly recommended and SHOULD only be omitted with documented justification. Requirements marked MAY are optional.
+
+---
+
 ## Overview
 
 This document specifies three normative interface contracts ("layer joints") that connect the behavioral consistency layer to the ANP protocol stack:
@@ -88,7 +96,9 @@ SATP gateway attestations SHOULD include a `behavioral_fingerprint` sidecar when
     },
 
     "attestation_ttl_seconds": 300,
-    "fingerprint_valid_until": "2026-04-01T00:05:00Z"
+    "fingerprint_valid_until": "2026-04-01T00:05:00Z",
+    "attestation_authorship": "harness",
+    "authorized_profile_hash": "sha256:..."
   }
 }
 ```
@@ -135,8 +145,11 @@ When an HJS Termination event fires, the SATP layer MUST emit a terminal attesta
     "attestation_id": "satp:term:f4e5d6",
     "session_id": "session:abc123",
     "trigger": "hjs_termination",
+    "termination_type": "graceful",
     "triggered_at": "2026-04-01T15:30:00Z",
     "grace_window_seconds": 60,
+    "attestation_authorship": "harness",
+    "synthesized_by": null,
 
     "behavioral_fingerprint_frozen": {
       "frozen_at": "2026-04-01T15:30:00.000Z",
@@ -196,16 +209,66 @@ When an HJS Termination event fires, the SATP layer MUST emit a terminal attesta
 4. `trust_score_input_hash` MUST be a hash of the input vector snapshot used to compute the score, enabling consumers to verify the score reflects a specific behavioral state.
 5. Every in-flight operation at termination MUST appear in `in_flight_at_termination` with an explicit `disposition` (`completed`, `voided`, or `aborted`) and, for voided operations, a `void_reason`.
 6. `call_velocity_per_minute` — unit MUST be explicit in the field name. The time window is the 5-minute rolling window ending at measurement time.
+7. `termination_type` MUST be one of: `graceful`, `forced`, `timeout`, `crash`, `revoked`, `partial`. The `revoked` type covers external authority revocation (e.g., credential expiration, admin kill). The `partial` type indicates a crash during the grace window where a frozen fingerprint was captured but `pending_attestations_resolved` is `false` — preserving partial behavioral data while signaling incompleteness.
+8. `attestation_authorship` MUST be one of: `harness`, `agent`, `composite`. Harness attestations are produced by the execution environment (more trustworthy, cannot be fabricated by the agent). Agent attestations are self-reported (richer, but lower trust). Composite attestations combine both sources. Consumers SHOULD apply different trust weights based on authorship.
+9. `synthesized_by` MUST be set to `"hjs"` when no SATP terminal attestation arrives within the grace window and HJS synthesizes one. In this case, `behavioral_fingerprint_frozen` MUST be `null`, creating an explicit audit gap marker rather than a silently clean record. When a normal terminal attestation is present, `synthesized_by` MUST be `null`.
 
 ---
 
 ## Open questions
 
-1. **Delegation ceiling** (see issue #31): Should the TAM/manifest layer allow a tool to declare `maxDelegationDepth`, rejecting calls from agents at subagent depth > N? This is currently unspecified and is the mechanism that would have prevented the Kiro production deletion incident.
+1. **Delegation ceiling** (see issue #31): The enforcement surface for `maxDelegationDepth` is the Tool Auth Manifest (TAM) layer, not the interface contracts spec. See [SEP-2385 (MCP Protocol)](https://github.com/modelcontextprotocol/specification) for the proposed TAM design. This spec SHOULD reference TAM as the delegation enforcement mechanism rather than duplicating the design.
 
-2. **Fingerprint transport**: Should behavioral fingerprints be transmitted as a standard SATP extension header, as a separate MCP notification, or as an out-of-band attestation object? The answer affects latency and whether fingerprints are visible to non-SATP consumers.
+2. **Fingerprint transport**: The schemas in this spec are transport-agnostic. Implementations MAY choose any transport mechanism (HTTP header, JWS payload, gRPC metadata, MCP tool call annotation). See Annex A for informational transport binding examples.
 
-3. **Compaction event sourcing**: This spec assumes the attesting agent reports its own `compaction_count` and fingerprints. A stronger design would have the harness (not the agent) report compaction events to a separate attestation service that the SATP gateway queries. Is that within scope?
+3. **Compaction event sourcing**: This spec assumes the attesting agent reports its own `compaction_count` and fingerprints. A stronger design would have the harness (not the agent) report compaction events to a separate attestation service that the SATP gateway queries. The `attestation_authorship` field (requirement 8 in Joint 3) provides the foundation for this — harness-sourced attestations carry higher trust by default. Implementations SHOULD prefer harness-sourced compaction counts when available.
+
+---
+
+## Annex A: Transport Binding Examples (Informational)
+
+The behavioral fingerprint schema is transport-agnostic. The following examples illustrate how implementations might bind fingerprints to specific transport mechanisms.
+
+### HTTP Header
+
+```http
+X-Behavioral-Fingerprint: eyJmaW5nZXJwcmludF9hdCI6Ii4uLiJ9  
+Content-Type: application/json
+```
+
+The header value is a base64url-encoded JSON object matching the `behavioral_fingerprint` schema.
+
+### JWS Payload
+
+```json
+{
+  "header": { "alg": "ES256", "typ": "fingerprint+jwt" },
+  "payload": {
+    "session_id": "session:abc123",
+    "behavioral_fingerprint": { ... }
+  }
+}
+```
+
+### gRPC Metadata
+
+```
+fingerprint-bin: <protobuf-encoded behavioral_fingerprint>
+```
+
+### MCP Tool Call Annotation
+
+```json
+{
+  "tool_call": {
+    "name": "writeDatabase",
+    "arguments": { ... },
+    "_meta": {
+      "behavioral_fingerprint": { ... }
+    }
+  }
+}
+```
 
 ---
 
