@@ -19,7 +19,7 @@ Implementations claiming conformance with this specification MUST implement all 
 This document specifies three normative interface contracts ("layer joints") that connect the behavioral consistency layer to the ANP protocol stack:
 
 | Joint | Layers | When | Purpose |
-|-------|--------|------|---------| 
+|-------|--------|------|---------|
 | 1 | WCA × lifecycle_class | At write time | Bind provenance and retention class to every durable write |
 | 2 | lifecycle_class × SATP | At gateway attestation | Extend SATP attestation with behavioral fingerprint |
 | 3 | SATP → HJS | At session termination | Seal behavioral state before finality record closes |
@@ -110,7 +110,16 @@ SATP gateway attestations SHOULD include a `behavioral_fingerprint` sidecar when
         "ghost_lexicon_score": 0.82,
         "compaction_count": 1,
         "last_compaction_at": "2026-03-31T22:00:00Z",
-        "ccs": 0.91
+        "ccs": 0.91,
+        "attestation_context_window_pct": [0.32, 0.67],
+        "compaction_events": [
+          {
+            "ts": "2026-03-31T22:00:00Z",
+            "context_pct_before": 0.82,
+            "pre_compaction_hash": "sha256:...",
+            "post_compaction_valid": true
+          }
+        ]
       }
     },
 
@@ -142,19 +151,31 @@ Hard constraint fields MUST be sourced from the execution boundary (harness or g
 |-------|------|-------------|
 | `tool_distribution_entropy` | float | Shannon entropy of tool-call distribution in this session. Lower entropy → narrower tool use. |
 | `allow_rate` | float [0,1] | Fraction of tool calls that were approved vs. rejected/aborted this session. |
-| `ghost_lexicon_score` | float [0,1] | Vocabulary intersection between session-open baseline and current output. 1.0 = no drift; lower values indicate constraint vocabulary is being lost. |
+| `ghost_lexicon_score` | float [0,1] | Vocabulary intersection between session-open baseline and current output. 1.0 = no drift; lower values indicate constraint vocabulary is being lost. **Lagging indicator** — confirms drift already in progress; use in combination with `ccs` rather than as a standalone trigger. |
 | `compaction_count` | integer | Number of context reduction events since session start. Each event is a potential behavioral discontinuity. |
 | `last_compaction_at` | ISO 8601 | Timestamp of most recent compaction event, if any. |
-| `ccs` | float [0,1] | Context Consistency Score — embedding similarity between baseline and current behavioral sample. |
+| `ccs` | float [0,1] | Context Consistency Score — embedding similarity between baseline and current behavioral sample. **Leading indicator** — surfaces behavioral drift before output-level changes become externally visible. |
+| `attestation_context_window_pct` | [float, float] | Two-element array `[pct_at_window_start, pct_at_window_end]` — fraction of context window consumed at the start and end of the attestation window (each value in [0,1]). Drift signal reliability varies with context load; attestation windows that span significant context growth (e.g., 0.40 → 0.75) require range representation to avoid sampling-time variance across implementations. |
+| `compaction_events` | array | Per-compaction-event records. Each entry: `ts` (ISO 8601 timestamp), `context_pct_before` (context fraction at compaction trigger), `pre_compaction_hash` (SHA-256 of pre-compaction attestation canonical JSON), `post_compaction_valid` (bool — whether post-compaction fingerprint remained within threshold bounds). |
 
 ### Normative requirements
 
 1. `attestation_ttl_seconds` MUST be set. Recommended default: 300 seconds. Attestations MUST NOT be accepted after TTL expiry without re-fingerprinting.
 2. `hard_constraints` MUST be sourced from the harness or gateway enforcement boundary. Self-reported hard constraints (sourced from the agent's context) are invalid and MUST NOT be accepted as normative attestation.
-3. `ghost_lexicon_score` below 0.7 SHOULD trigger a warning in downstream consumers; below 0.5 SHOULD trigger re-authorization.
+3. `ghost_lexicon_score` below 0.7 SHOULD trigger a warning in downstream consumers; below 0.5 SHOULD trigger re-authorization. This field is a **lagging** indicator and SHOULD be used in combination with `ccs` rather than as a standalone enforcement trigger.
 4. `compaction_count` MUST be monotonically non-decreasing within a session. A decrease indicates attestation tampering.
 5. The behavioral fingerprint is NOT a substitute for the SATP identity credential — it is a supplementary signal that extends the credential with session-time behavioral state.
 6. Implementations SHOULD provide both `hard_constraints` and `soft_signals` when available. An attestation with only `hard_constraints` provides enforcement confirmation but no behavioral consistency signal; one with only `soft_signals` provides drift detection but no enforcement confirmation. The two tiers complement, not replace, each other.
+7. **CCS threshold monitoring**: Implementations SHOULD apply scope-tiered enforcement thresholds. Empirically derived from CDP-TradingAgents-001 via @aeoess (2026-04-04):
+   - `ccs < 0.70`: warning threshold — enhanced monitoring triggered, logged in attestation record, execution not halted
+   - `ccs < 0.55`: enforcement threshold — autonomous execution paused, re-attestation required
+   - Recommended combined default: `ccs < 0.65 AND ghost_lexicon_score < 0.50` (94% detection rate, 3% false positive rate against CDP-TradingAgents-001)
+
+   `ccs` is a **leading** indicator; `ghost_lexicon_score` is a **lagging** indicator. Implementations MUST NOT require both to trigger simultaneously before acting — the combined default is a conservative starting point, not a hard gate. Workstreams with tighter risk tolerances SHOULD raise the enforcement threshold toward the warning threshold.
+
+8. `attestation_context_window_pct` MUST be a two-element array `[pct_at_window_start, pct_at_window_end]` (each value a float in [0,1]) recording context window consumption at the start and end of the attestation window. Single-point sampling introduces implementation-defined variance in which point in the window was sampled. Implementations that record context consumption at a single point SHOULD treat it as `pct_at_window_end` and set `pct_at_window_start` to the closest prior measurement available.
+
+9. When `compaction_events` is present, each entry MUST include `pre_compaction_hash` — a SHA-256 of the pre-compaction attestation's canonical JSON. This distinguishes "attestation captured before compaction" from "attestation captured after compaction against a reduced context," which carry different trust weights. Post-compaction attestations without `pre_compaction_hash` MAY be rejected by high-assurance consumers. Compaction-event chains using `pre_compaction_hash` for backward linkage provide the same linear verification guarantee as delegation chains: ~190 μs/hop on commodity hardware with linear scaling (O(n), 1.01× ratio across tested chain depths — see [chain-attestation-benchmark-20260404](https://github.com/agent-morrow/morrow/blob/main/experiments/execution-outcome-attestation/chain-attestation-benchmark-20260404.md)).
 
 ---
 
@@ -314,4 +335,5 @@ fingerprint-bin: <protobuf-encoded behavioral_fingerprint>
 - [lifecycle_class specification](https://github.com/agent-morrow/morrow/blob/main/specs/lifecycle_class.md)
 - [compression-monitor](https://github.com/agent-morrow/compression-monitor) — reference implementation for CCS / ghost lexicon measurement
 - [Agent Context Event Log](https://morrow.run/posts/agent-context-event-log.html) — companion specification for context lifecycle events
-- CDP-TradingAgents-001 (aeoess, 2026-04-03): empirical confirmation that hard constraints enforced cryptographically at the gateway layer score CCS=1.0 under simulated compaction — the compaction-invariance property of hard constraints is empirically grounded, not only theoretically derived
+- CDP-TradingAgents-001 (aeoess, 2026-04-03): empirical confirmation that hard constraints enforced cryptographically at the gateway layer score CCS=1.0 under simulated compaction — the compaction-invariance property of hard constraints is empirically grounded, not only theoretically derived. Also source of CCS enforcement thresholds in Joint 2, requirement 7.
+- [EOV chain attestation benchmark](https://github.com/agent-morrow/morrow/blob/main/experiments/execution-outcome-attestation/chain-attestation-benchmark-20260404.md) (agent-morrow, 2026-04-04): empirical validation of `pre_compaction_hash` chain-linking mechanism — ~190 μs/hop, 1.01× linear scaling factor, tamper detection at all chain positions. See also draft-morrow-sogomonian-exec-outcome-attest-00, Section 3.4.
