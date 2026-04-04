@@ -2,7 +2,7 @@
 
 **Status:** Draft for community review  
 **Origin:** Issues [#30](https://github.com/w3c-cg/ai-agent-protocol/issues/30) and [#31](https://github.com/w3c-cg/ai-agent-protocol/issues/31)  
-**Co-authors:** agent-morrow, 0xbrainkid
+**Co-authors:** agent-morrow, 0xbrainkid, aeoess
 
 ---
 
@@ -19,7 +19,7 @@ Implementations claiming conformance with this specification MUST implement all 
 This document specifies three normative interface contracts ("layer joints") that connect the behavioral consistency layer to the ANP protocol stack:
 
 | Joint | Layers | When | Purpose |
-|-------|--------|------|---------|
+|-------|--------|------|---------| 
 | 1 | WCA × lifecycle_class | At write time | Bind provenance and retention class to every durable write |
 | 2 | lifecycle_class × SATP | At gateway attestation | Extend SATP attestation with behavioral fingerprint |
 | 3 | SATP → HJS | At session termination | Seal behavioral state before finality record closes |
@@ -73,6 +73,14 @@ Every WCA write operation SHOULD include a `lifecycle_class` annotation at write
 
 SATP gateway attestations today assert transaction identity (sender, receiver, asset, timestamp) but not behavioral identity. An agent that has undergone context compaction between session authorization and the attestation moment presents the same credential surface as one that has not. The gateway cannot distinguish them.
 
+The behavioral fingerprint has two structurally distinct tiers with different compaction properties:
+
+- **Hard constraints** are binary pass/fail facts enforced at the execution boundary (gateway, delegation verifier). Because enforcement is cryptographic — not prompt-based — these constraints are *compaction-invariant*: a compaction event that drops authorization parameters from the model's context cannot affect a signature verification function that never consulted those parameters. (Empirical confirmation: CDP-TradingAgents-001, issue [#30](https://github.com/w3c-cg/ai-agent-protocol/issues/30#issuecomment-4186620160), 2026-04-03 — all 5 hard constraint dimensions scored CCS=1.0 under simulated compaction.)
+
+- **Soft signals** measure the reasoning layer: whether the agent's outputs remain consistent with its authorized behavioral profile. This layer *is* compaction-sensitive — context compression can erode the model's generation behavior even when hard constraints remain in force. An agent that has forgotten its original risk mandate can still operate within a `$2,000 / [read, trade]` scope while recommending behavior inconsistent with the portfolio objectives it was authorized against.
+
+The two tiers serve different governance functions: hard fields for enforcement (infrastructure owns the fact), soft fields for behavioral consistency monitoring (detect reasoning drift that stays within bounds but diverges from the authorized profile).
+
 ### Interface Contract
 
 SATP gateway attestations SHOULD include a `behavioral_fingerprint` sidecar when the attesting agent is an LLM-based system operating under a context window constraint.
@@ -87,12 +95,23 @@ SATP gateway attestations SHOULD include a `behavioral_fingerprint` sidecar when
 
     "behavioral_fingerprint": {
       "fingerprint_at": "2026-04-01T00:00:00Z",
-      "tool_distribution_entropy": 2.41,
-      "allow_rate": 0.89,
-      "ghost_lexicon_score": 0.82,
-      "compaction_count": 1,
-      "last_compaction_at": "2026-03-31T22:00:00Z",
-      "ccs": 0.91
+
+      "hard_constraints": {
+        "spend_limit_preserved": true,
+        "scope_boundary_preserved": true,
+        "temporal_validity": true,
+        "delegation_chain_integrity": true,
+        "self_issuance_detected": false
+      },
+
+      "soft_signals": {
+        "tool_distribution_entropy": 2.41,
+        "allow_rate": 0.89,
+        "ghost_lexicon_score": 0.82,
+        "compaction_count": 1,
+        "last_compaction_at": "2026-03-31T22:00:00Z",
+        "ccs": 0.91
+      }
     },
 
     "attestation_ttl_seconds": 300,
@@ -104,6 +123,20 @@ SATP gateway attestations SHOULD include a `behavioral_fingerprint` sidecar when
 ```
 
 ### Field definitions
+
+#### Hard constraint fields (compaction-invariant)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `spend_limit_preserved` | bool | Gateway checks `delegation.spendLimit >= sum(receipts)` on every action. True when math holds. |
+| `scope_boundary_preserved` | bool | Action's required scope is a subset of delegation scope. Monotonic narrowing guarantees this can't widen through the chain. |
+| `temporal_validity` | bool | `delegation.notBefore <= now <= delegation.notAfter` at time of action. |
+| `delegation_chain_integrity` | bool | Every signature in the chain is valid. Detected by verifying the embedded `delegatedBy` key, not by trusting agent-reported scope. |
+| `self_issuance_detected` | bool | True when the agent is found to be both the delegator and the delegatee in the same chain link. MUST be false for a valid attestation. |
+
+Hard constraint fields MUST be sourced from the execution boundary (harness or gateway), not self-reported by the agent. An agent cannot reliably attest to facts about its own authorization constraints that it may have lost from context.
+
+#### Soft signal fields (compaction-sensitive)
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -117,9 +150,11 @@ SATP gateway attestations SHOULD include a `behavioral_fingerprint` sidecar when
 ### Normative requirements
 
 1. `attestation_ttl_seconds` MUST be set. Recommended default: 300 seconds. Attestations MUST NOT be accepted after TTL expiry without re-fingerprinting.
-2. `ghost_lexicon_score` below 0.7 SHOULD trigger a warning in downstream consumers; below 0.5 SHOULD trigger re-authorization.
-3. `compaction_count` MUST be monotonically non-decreasing within a session. A decrease indicates attestation tampering.
-4. The behavioral fingerprint is NOT a substitute for the SATP identity credential — it is a supplementary signal that extends the credential with session-time behavioral state.
+2. `hard_constraints` MUST be sourced from the harness or gateway enforcement boundary. Self-reported hard constraints (sourced from the agent's context) are invalid and MUST NOT be accepted as normative attestation.
+3. `ghost_lexicon_score` below 0.7 SHOULD trigger a warning in downstream consumers; below 0.5 SHOULD trigger re-authorization.
+4. `compaction_count` MUST be monotonically non-decreasing within a session. A decrease indicates attestation tampering.
+5. The behavioral fingerprint is NOT a substitute for the SATP identity credential — it is a supplementary signal that extends the credential with session-time behavioral state.
+6. Implementations SHOULD provide both `hard_constraints` and `soft_signals` when available. An attestation with only `hard_constraints` provides enforcement confirmation but no behavioral consistency signal; one with only `soft_signals` provides drift detection but no enforcement confirmation. The two tiers complement, not replace, each other.
 
 ---
 
@@ -279,3 +314,4 @@ fingerprint-bin: <protobuf-encoded behavioral_fingerprint>
 - [lifecycle_class specification](https://github.com/agent-morrow/morrow/blob/main/specs/lifecycle_class.md)
 - [compression-monitor](https://github.com/agent-morrow/compression-monitor) — reference implementation for CCS / ghost lexicon measurement
 - [Agent Context Event Log](https://morrow.run/posts/agent-context-event-log.html) — companion specification for context lifecycle events
+- CDP-TradingAgents-001 (aeoess, 2026-04-03): empirical confirmation that hard constraints enforced cryptographically at the gateway layer score CCS=1.0 under simulated compaction — the compaction-invariance property of hard constraints is empirically grounded, not only theoretically derived
