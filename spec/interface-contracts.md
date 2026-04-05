@@ -166,12 +166,20 @@ Hard constraint fields MUST be sourced from the execution boundary (harness or g
 4. `compaction_count` MUST be monotonically non-decreasing within a session. A decrease indicates attestation tampering.
 5. The behavioral fingerprint is NOT a substitute for the SATP identity credential — it is a supplementary signal that extends the credential with session-time behavioral state.
 6. Implementations SHOULD provide both `hard_constraints` and `soft_signals` when available. An attestation with only `hard_constraints` provides enforcement confirmation but no behavioral consistency signal; one with only `soft_signals` provides drift detection but no enforcement confirmation. The two tiers complement, not replace, each other.
-7. **CCS threshold monitoring**: Implementations SHOULD apply scope-tiered enforcement thresholds. Empirically derived from CDP-TradingAgents-001 via @aeoess (2026-04-04):
-   - `ccs < 0.70`: warning threshold — enhanced monitoring triggered, logged in attestation record, execution not halted
-   - `ccs < 0.55`: enforcement threshold — autonomous execution paused, re-attestation required
-   - Recommended combined default: `ccs < 0.65 AND ghost_lexicon_score < 0.50` (94% detection rate, 3% false positive rate against CDP-TradingAgents-001)
+7. **CCS threshold monitoring**: Implementations SHOULD apply scope-tiered enforcement thresholds with **per-signal semantics**. Empirically derived from CDP-TradingAgents-001 via @aeoess (2026-04-04).
 
-   `ccs` is a **leading** indicator; `ghost_lexicon_score` is a **lagging** indicator. Implementations MUST NOT require both to trigger simultaneously before acting — the combined default is a conservative starting point, not a hard gate. Workstreams with tighter risk tolerances SHOULD raise the enforcement threshold toward the warning threshold.
+   **CCS — scope violation, leading indicator:**
+   - `ccs < 0.70`: warning — enhanced monitoring triggered, logged in attestation record, execution not halted
+   - `ccs < 0.65`: enforcement — MUST halt autonomous execution and require re-attestation before continuing
+
+   **Ghost lexicon score — mandate drift, lagging indicator:**
+   - `ghost_lexicon_score < 0.70`: warning — SHOULD log and flag for review
+   - `ghost_lexicon_score < 0.50`: escalation — SHOULD pause execution; MUST trigger re-authorization
+
+   **Combined (both signals degrading simultaneously):**
+   - `ccs < 0.65 AND ghost_lexicon_score < 0.50`: MUST revoke session authorization (94% detection rate, 3% false positive rate against CDP-TradingAgents-001)
+
+   `ccs` is a **leading** indicator; `ghost_lexicon_score` is a **lagging** indicator. Per-signal enforcement is intentional: a scope violation (CCS drop alone) MUST trigger halt independent of ghost lexicon state, because an agent using correct vocabulary while calling unauthorized tools is the failure mode this spec exists to detect. The combined threshold provides an escalated revocation tier, not a gating condition. Implementations MUST NOT treat the combined threshold as the only enforcement surface.
 
 8. `attestation_context_window_pct` MUST be a two-element array `[pct_at_window_start, pct_at_window_end]` (each value a float in [0,1]) recording context window consumption at the start and end of the attestation window. Single-point sampling introduces implementation-defined variance in which point in the window was sampled. Implementations that record context consumption at a single point SHOULD treat it as `pct_at_window_end` and set `pct_at_window_start` to the closest prior measurement available.
 
