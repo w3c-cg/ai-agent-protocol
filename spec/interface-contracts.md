@@ -101,7 +101,10 @@ SATP gateway attestations SHOULD include a `behavioral_fingerprint` sidecar when
         "scope_boundary_preserved": true,
         "temporal_validity": true,
         "delegation_chain_integrity": true,
-        "self_issuance_detected": false
+        "self_issuance_detected": false,
+        "revocation_status_preserved": true,
+        "_revocation_check_ts": "2026-04-01T00:00:00Z",
+        "_revocation_cache_ttl_seconds": 300
       },
 
       "soft_signals": {
@@ -142,6 +145,11 @@ SATP gateway attestations SHOULD include a `behavioral_fingerprint` sidecar when
 | `temporal_validity` | bool | `delegation.notBefore <= now <= delegation.notAfter` at time of action. |
 | `delegation_chain_integrity` | bool | Every signature in the chain is valid. Detected by verifying the embedded `delegatedBy` key, not by trusting agent-reported scope. |
 | `self_issuance_detected` | bool | True when the agent is found to be both the delegator and the delegatee in the same chain link. MUST be false for a valid attestation. |
+| `revocation_status_preserved` | bool | Credential revocation status confirmed valid within `_revocation_cache_ttl_seconds`. **Structurally distinct from the other four fields** — requires an external registry call (DID status list, StatusList2021, OCSP) and imports registry availability as a liveness dependency. See normative requirement 10 for enforcement semantics. |
+| `_revocation_check_ts` | ISO 8601 | Timestamp of most recent revocation check. MUST be present when `revocation_status_preserved` is set. |
+| `_revocation_cache_ttl_seconds` | integer | Cache TTL applied to this revocation check. Default 300 (matching `attestation_ttl_seconds`). |
+
+> **Note:** Fields prefixed `_` (underscore) are metadata about enforcement state, not behavioral signals. They appear in the JSON schema for implementer guidance and MUST NOT be included in the CCS composite score calculation.
 
 Hard constraint fields MUST be sourced from the execution boundary (harness or gateway), not self-reported by the agent. An agent cannot reliably attest to facts about its own authorization constraints that it may have lost from context.
 
@@ -195,6 +203,18 @@ Hard constraint fields MUST be sourced from the execution boundary (harness or g
 8. `attestation_context_window_pct` MUST be a two-element array `[pct_at_window_start, pct_at_window_end]` (each value a float in [0,1]) recording context window consumption at the start and end of the attestation window. Single-point sampling introduces implementation-defined variance in which point in the window was sampled. Implementations that record context consumption at a single point SHOULD treat it as `pct_at_window_end` and set `pct_at_window_start` to the closest prior measurement available.
 
 9. When `compaction_events` is present, each entry MUST include `pre_compaction_hash` — a SHA-256 of the pre-compaction attestation's canonical JSON. This distinguishes "attestation captured before compaction" from "attestation captured after compaction against a reduced context," which carry different trust weights. Post-compaction attestations without `pre_compaction_hash` MAY be rejected by high-assurance consumers. Compaction-event chains using `pre_compaction_hash` for backward linkage provide the same linear verification guarantee as delegation chains: ~190 μs/hop on commodity hardware with linear scaling (O(n), 1.01× ratio across tested chain depths — see [chain-attestation-benchmark-20260404](https://github.com/agent-morrow/morrow/blob/main/experiments/execution-outcome-attestation/chain-attestation-benchmark-20260404.md)).
+
+10. **Revocation enforcement semantics.** `revocation_status_preserved` is structurally distinct from the other four hard constraint fields: the other four are evaluable from data present at the gateway (no external call, no liveness dependency). Revocation requires a call to an external registry (DID status list, StatusList2021, or OCSP), which imports that registry's availability as a liveness dependency for inline enforcement.
+
+    Normative rules:
+
+    a. `revocation_status_preserved` is a **binary pre-condition**, not a CCS dimension. A revocation failure MUST hard-block before CCS is computed. It MUST NOT degrade the CCS composite score — revocation is not a matter of degree.
+
+    b. Implementations MUST check revocation at session init and cache the result for at most `_revocation_cache_ttl_seconds` (recommended default: 300s). On cache miss or registry unavailability, the default policy is **fail-closed**: block the action and tag the blocking reason as `revocation_precheck_failed`. Implementations MAY configure fail-open for specific scopes, but MUST document this as an explicit policy deviation and MUST record it in the attestation under `_revocation_cache_ttl_seconds` = 0 to signal that no TTL-bound check was applied.
+
+    c. A `revocation_precheck_failed` block is NOT equivalent to a behavioral consistency failure. The blocking reason MUST be tagged separately from `ccs` or `ghost_lexicon_score` thresholds to enable accurate root-cause attribution in the receipt chain.
+
+    d. When `revocation_status_preserved` is present, `_revocation_check_ts` MUST also be present. Consumers MUST reject attestations that carry `revocation_status_preserved: true` without `_revocation_check_ts` or with a check timestamp older than `_revocation_cache_ttl_seconds`.
 
 ---
 
