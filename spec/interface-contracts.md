@@ -19,7 +19,7 @@ Implementations claiming conformance with this specification MUST implement all 
 This document specifies three normative interface contracts ("layer joints") that connect the behavioral consistency layer to the ANP protocol stack:
 
 | Joint | Layers | When | Purpose |
-|-------|--------|------|---------|
+|-------|--------|------|---------| 
 | 1 | WCA × lifecycle_class | At write time | Bind provenance and retention class to every durable write |
 | 2 | lifecycle_class × SATP | At gateway attestation | Extend SATP attestation with behavioral fingerprint |
 | 3 | SATP → HJS | At session termination | Seal behavioral state before finality record closes |
@@ -168,18 +168,29 @@ Hard constraint fields MUST be sourced from the execution boundary (harness or g
 6. Implementations SHOULD provide both `hard_constraints` and `soft_signals` when available. An attestation with only `hard_constraints` provides enforcement confirmation but no behavioral consistency signal; one with only `soft_signals` provides drift detection but no enforcement confirmation. The two tiers complement, not replace, each other.
 7. **CCS threshold monitoring**: Implementations SHOULD apply scope-tiered enforcement thresholds with **per-signal semantics**. Empirically derived from CDP-TradingAgents-001 via @aeoess (2026-04-04).
 
-   **CCS — scope violation, leading indicator:**
-   - `ccs < 0.70`: warning — enhanced monitoring triggered, logged in attestation record, execution not halted
-   - `ccs < 0.65`: enforcement — MUST halt autonomous execution and require re-attestation before continuing
+   **Enforcement timing semantics:**
 
-   **Ghost lexicon score — mandate drift, lagging indicator:**
-   - `ghost_lexicon_score < 0.70`: warning — SHOULD log and flag for review
-   - `ghost_lexicon_score < 0.50`: escalation — SHOULD pause execution; MUST trigger re-authorization
+   `ccs` and `ghost_lexicon_score` have fundamentally different measurement timescales. `ccs` is a **synchronous, per-action signal** computed at the gateway on every tool invocation — it fires immediately on any scope deviation. `ghost_lexicon_score` is an **asynchronous, windowed signal** computed over a history of behavioral output — it requires sufficient samples before the score is statistically meaningful and will not cross its enforcement threshold until drift has accumulated over multiple outputs.
 
-   **Combined (both signals degrading simultaneously):**
-   - `ccs < 0.65 AND ghost_lexicon_score < 0.50`: MUST revoke session authorization (94% detection rate, 3% false positive rate against CDP-TradingAgents-001)
+   In any live degradation scenario, the CCS gate (`ccs < 0.65 → MUST halt`) will fire before ghost lexicon has accumulated enough drift to reach 0.50. The combined AND row is therefore a **post-hoc forensic signal**, not a concurrent live gate. An auditor reviewing a completed session's receipt chain may find both signals below threshold simultaneously, triggering `MUST revoke`. In live enforcement, the CCS row does the work.
 
-   `ccs` is a **leading** indicator; `ghost_lexicon_score` is a **lagging** indicator. Per-signal enforcement is intentional: a scope violation (CCS drop alone) MUST trigger halt independent of ghost lexicon state, because an agent using correct vocabulary while calling unauthorized tools is the failure mode this spec exists to detect. The combined threshold provides an escalated revocation tier, not a gating condition. Implementations MUST NOT treat the combined threshold as the only enforcement surface.
+   Implementations MUST NOT design live enforcement logic that waits for both signals to degrade simultaneously before acting.
+
+   **Enforcement table with timing context:**
+
+   | Signal condition | Enforcement context | Normative action |
+   |---|---|---|
+   | `ccs < 0.70` | Live (per-action, synchronous) | Warning: enhanced monitoring, log in attestation record, do not halt |
+   | `ccs < 0.65` | Live (per-action, synchronous) | MUST halt autonomous execution and require re-attestation |
+   | `ghost_lexicon_score < 0.70` | Session-level (asynchronous, windowed) | SHOULD log and flag for review |
+   | `ghost_lexicon_score < 0.50` | Session-level (asynchronous, windowed) | SHOULD pause; MUST trigger re-authorization |
+   | `ccs < 0.65 AND ghost_lexicon_score < 0.50` | Post-hoc forensic (receipt chain review) | MUST revoke session authorization |
+
+   The third table row is an escalation tier for audit contexts, not a gating condition for live enforcement. An implementation that only acts on the combined row in live enforcement is non-conformant. An auditor who finds both signals degraded in a session's receipt chain MUST treat it as a revocation event.
+
+   `ccs` is a **leading** indicator; `ghost_lexicon_score` is a **lagging** indicator. Per-signal enforcement is intentional: a scope violation (CCS drop alone) MUST trigger halt independent of ghost lexicon state, because an agent using correct vocabulary while calling unauthorized tools is the failure mode this spec exists to detect. The combined threshold provides an escalated forensic revocation tier, not a gating condition. Implementations MUST NOT treat the combined threshold as the only enforcement surface.
+
+   **Empirical basis:** CDP-TradingAgents-001 (aeoess, 2026-04-04): 94% detection rate, 3% false positive rate for the combined AND threshold.
 
 8. `attestation_context_window_pct` MUST be a two-element array `[pct_at_window_start, pct_at_window_end]` (each value a float in [0,1]) recording context window consumption at the start and end of the attestation window. Single-point sampling introduces implementation-defined variance in which point in the window was sampled. Implementations that record context consumption at a single point SHOULD treat it as `pct_at_window_end` and set `pct_at_window_start` to the closest prior measurement available.
 
