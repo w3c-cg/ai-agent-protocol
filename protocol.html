@@ -182,6 +182,10 @@
           <li>Construct the Authorization header in the above format and send it to the service.</li>
         </ol>
 
+        <h5>Request Binding</h5>
+        <p>The authentication proof should be bound to the HTTP request that it authorizes, not only to the client's DID, nonce, timestamp, and service domain. The signed input should cover the HTTP method, authority, path with query or equivalent target URI, creation timestamp, nonce, verification method, and, for requests with bodies, a digest of the request content.</p>
+        <p>Future revisions can define this request-bound proof using an explicit canonical request object or by profiling <a href="https://www.rfc-editor.org/rfc/rfc9421.html">RFC 9421 HTTP Message Signatures</a> together with <a href="https://www.rfc-editor.org/rfc/rfc9530.html">RFC 9530 HTTP Digest Fields</a>. Whichever syntax is chosen, verifiers should reconstruct the covered request components from the received request before accepting the signature.</p>
+
         <h4>Service Verification</h4>
         <h5>Verify Request Header</h5>
         <p>After receiving the client's request, the service performs the following verification:</p>
