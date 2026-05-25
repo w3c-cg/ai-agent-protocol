@@ -132,6 +132,7 @@
           <li><strong>Simplicity of operations</strong>: The domain owner manages identifier lifecycle within its namespace (create, update, revoke). Peers fetch DID Documents directly via HTTP(S) (for example, <code>did:wba:agent.example.com:alice</code> resolves to <code>https://agent.example.com/alice/did.json</code>), enabling straightforward discovery without bespoke networks.</li>
           <li><strong>Leverages existing Web infrastructure and scales</strong>: Builds on ubiquitous DNS, HTTP, CDNs, caching, and monitoring stacks, enabling horizontal scalability to billions of identifiers and low operational overhead.</li>
         </ul>
+        <p>The component that generates a DID Document does not need to be the same component that serves it over HTTPS. An implementation can generate DID Documents in an agent runtime, CLI, worker, or deployment step and publish them through static hosting, a CDN, a reverse proxy, a gateway, or other infrastructure controlled by the same origin. The published DID Document should accurately reflect the agent's current public identity, service metadata, and active verification methods.</p>
         <p class="note">Note: The did:wba method follows a Web-anchored resolution model aligned with existing enterprise and public Internet deployments.</p>
         <p><strong>Method reference</strong>: <a href="https://github.com/agent-network-protocol/AgentNetworkProtocol/blob/main/03-did-wba-method-design-specification.md">did:wba method design specification</a></p>
 
@@ -505,6 +506,7 @@
         <pre style="background: transparent; border: none; margin: 0; padding: 0;"><code>https://{domain}/.well-known/agent-descriptions</code></pre>
         
         <p>This path should return a JSON-LD document containing URLs of all public agent description documents under the domain.</p>
+        <p>The discovery document and linked agent description documents can be generated separately from the agent runtime that they describe. For example, an agent runtime can export an agent description document, and a deployment pipeline or gateway can publish both the description and the <code>.well-known</code> collection under the controlling domain. Relying parties only need the published resources to remain available under the origin and current enough for discovery and verification decisions.</p>
         
         <h4>Discovery Document Format</h4>
         
