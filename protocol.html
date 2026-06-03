@@ -116,8 +116,8 @@
 <h3>Design Principles</h3>
 <p>The design reuses mature Web infrastructure, including DNS, HTTPS, Web PKI, HTTP caching, and ordinary Web hosting, while preserving the decentralized identity model. Each platform may keep its own account and domain management system, but agents can still interoperate across platforms through resolvable DID Documents and standardized verification methods.</p>
 <p>For path-type DIDs, the DID path carries a binding public key fingerprint. This makes the relationship between the DID and the subject-controlled key independently verifiable. Even when a platform hosts the DID Document, a verifier can still compare the document key material with the fingerprint embedded in the DID path and detect silent key substitution.</p>
-<p>The DID string is treated as a verifiable cryptographic identifier rather than a stable human-readable name. When the binding key changes, the path-type DID changes as well. Stable user-facing references should be provided by a name service such as WNS or Handle, while the DID remains responsible for cryptographic verifiability.</p>
-<p>The method also provides a compatibility path for native <code>did:web</code>. A native <code>did:web</code> identifier can participate in authentication, Handle / WNS integration, service discovery, and end-to-end encryption as long as it satisfies the compatibility rules defined in this section.</p>
+<p>The DID string is treated as a verifiable cryptographic identifier rather than a stable human-readable name. When the binding key changes, the path-type DID changes as well. Stable user-facing references can be provided by an upper-layer Agent Name Service, similar to DNS, while the DID remains responsible for cryptographic verifiability.</p>
+<p>The method also provides a compatibility path for native <code>did:web</code>. A native <code>did:web</code> identifier can participate in authentication, Handle-based name binding, service discovery, and end-to-end encryption as long as it satisfies the compatibility rules defined in this section.</p>
 </section>
 
 <section id="did-wba-did-method-specification">
@@ -327,7 +327,7 @@ did:wba:example.com%3A3000:user:alice:e1_&lt;fingerprint&gt;</code></pre>
 <li><strong>type</strong>: Service type. Currently the following types are supported:
                     <ul>
 <li><code>AgentDescription</code>: agent description service. <code>serviceEndpoint</code> points to documents that comply with the <a href="/07-anp-agent-description-protocol-specification.md">ANP Agent Description Protocol Specification</a>.</li>
-<li><code>ANPHandleService</code>: Handle binding service, used for WNS (WBA Name Space) bidirectional binding verification. <code>serviceEndpoint</code> MUST be a dereferenceable absolute HTTPS URI under the Handle Provider's domain. For details, see the <a href="04-anp-did-wba-name-space-specification.md">ANP DID:WBA Namespace Specification</a>.</li>
+<li><code>ANPHandleService</code>: Handle binding service, used for optional Handle-based name binding verification. <code>serviceEndpoint</code> MUST be a dereferenceable absolute HTTPS URI under the Handle Provider's domain.</li>
 </ul>
 </li>
 </ul>
@@ -418,7 +418,7 @@ did:wba:example.com%3A3000:user:alice:e1_&lt;fingerprint&gt;
 <h5>Update</h5>
 <p>To update the DID document, you need to update the <code>did.json</code> file corresponding to the DID.</p>
 <p>For path type did:wba with the default path scheme, as long as the last bound key fingerprint of the DID path does not change, the DID itself will remain unchanged, but other contents of the DID document can change, for example, adding new verification keys, revoking old keys, or updating service endpoints.</p>
-<p>If the binding key changes, the path DID MUST be changed to the new DID. At this time, a new DID document should be created, and the upper-layer name service (such as WNS/Handle) is responsible for stable reference and migration.</p>
+<p>If the binding key changes, the path DID MUST be changed to the new DID. At this time, a new DID document should be created, and an upper-layer Agent Name Service, similar to DNS, can be responsible for stable references and migration.</p>
 <blockquote>
 <p>Note:</p>
 <ol>
@@ -430,7 +430,7 @@ did:wba:example.com%3A3000:user:alice:e1_&lt;fingerprint&gt;
 <section id="did-wba-deactivation">
 <h5>Deactivation</h5>
 <p>To delete a DID document, the <code>did.json</code> file must be removed or otherwise no longer publicly available.</p>
-<p>For path type did:wba using the default path scheme, if the binding key is permanently discarded, the rotation can also be completed by deactivating the old DID and creating a new DID; the stable reference relationship is maintained by the upper-layer name service.</p>
+<p>For path type did:wba using the default path scheme, if the binding key is permanently discarded, the rotation can also be completed by deactivating the old DID and creating a new DID; the stable reference relationship is maintained by an upper-layer Agent Name Service.</p>
 </section>
 <section id="did-wba-document-proof">
 <h5>DID Document Proof</h5>
@@ -470,7 +470,7 @@ did:wba:example.com%3A3000:user:alice:e1_&lt;fingerprint&gt;
 </section>
 <section id="did-wba-security-and-privacy-considerations">
 <h4>Security and Privacy Considerations</h4>
-<p>For security and privacy considerations, please refer to <a href="https://w3c-ccg.github.io/did-method-web/#security-and-privacy-considerations">did:web method specification section 2.6</a>. Implementers should also pay additional attention to DID rotation caused by binding key changes under the default path scheme, and name service synchronization issues.</p>
+<p>For security and privacy considerations, please refer to <a href="https://w3c-ccg.github.io/did-method-web/#security-and-privacy-considerations">did:web method specification section 2.6</a>. Implementers should also pay additional attention to DID rotation caused by binding key changes under the default path scheme, and Agent Name Service synchronization issues.</p>
 
 </section>
 </section>
@@ -690,7 +690,7 @@ Cache-Control: no-store</code></pre>
 <p>Privacy protection is very important in a decentralized network. For example, illegal software may record and track the user's behavior through the user's DID, causing the leakage of user privacy.</p>
 <p>In this regard, we suggest that DID providers can adopt a multi-DID strategy, that is, generate multiple DIDs for one user, each DID has different roles and permissions, and uses different key pairs to achieve privacy protection and fine-grained permission control.</p>
 <p>For example, a master DID is generated for the user. This DID generally does not change and is used in scenarios such as maintaining social relationships. Then a series of sub-DIDs are generated for the user, which can be used for shopping, ordering takeout, booking tickets and other scenarios. These sub-DIDs are subordinate to the main DID, and expired DIDs can be periodically deactivated and new DIDs applied to improve privacy and security protection.</p>
-<p>For scenarios that require stable external references but also want the underlying DID to be rotated, it is recommended to use it in conjunction with a name service (such as WNS/Handle): Handle remains stable and human-readable, and the underlying did:wba can rotate as the binding key changes.</p>
+<p>For scenarios that require stable external references but also want the underlying DID to be rotated, it is recommended to use an upper-layer Agent Name Service, similar to DNS: the stable agent name remains human-readable, and the underlying did:wba can rotate as the binding key changes.</p>
 </section>
 <section id="did-wba-security-tips">
 <h3>Security Tips</h3>
@@ -703,7 +703,7 @@ Cache-Control: no-store</code></pre>
 <li>By default, cross-platform authentication should prefer signing with a bound key.</li>
 <li>New deployments SHOULD prefer the <code>e1_</code> profile.</li>
 <li>Users should generate multiple DIDs, each with different roles and permissions, and use different key pairs to achieve fine-grained permission control.</li>
-<li>When the binding key changes, the path-type DID will change with it, so upper-level name service mappings should be updated synchronously.</li>
+<li>When the binding key changes, the path-type DID will change with it, so upper-level Agent Name Service mappings should be updated synchronously.</li>
 </ul>
 </li>
 <li><strong>Anti-attack measures</strong>
@@ -742,7 +742,7 @@ Cache-Control: no-store</code></pre>
 <p>The goal of the compatibility mode is to enable the native <code>did:web</code> to still access the capabilities defined in this specification without requiring the other party to migrate the DID to <code>did:wba</code>, including but not limited to:</p>
 <ul>
 <li>Cross-platform identity authentication (the cross-platform authentication sections)</li>
-<li>Handle / WNS integration</li>
+<li>Handle-based name binding</li>
 <li>end-to-end encryption Communication (E2EE)</li>
 <li>ANP service discovery (including <code>AgentDescription</code> and <code>ANPMessageService</code>)</li>
 </ul>
@@ -778,31 +778,24 @@ Cache-Control: no-store</code></pre>
 </ol>
 <p>In compatibility mode, the identity binding semantics of <code>did:web</code> comes from the parsing result of <code>did:web</code> itself, rather than the path binding public key fingerprint of did:wba.</p>
 </section>
-<section id="appendix-b-handle-wns">
-<h4>Handle / WNS Compatibility</h4>
-<p>Native <code>did:web</code> is compatible with did:wba's Handle / WNS system.</p>
-<p>When a <code>did:web</code> DID Document declares <code>ANPHandleService</code> in <code>service</code>, the verifier MAY perform bidirectional binding verification using the legacy domain-based compatibility model derived from earlier WNS behavior. This compatibility model is intentionally weaker than the mainline WNS exact-handle / provider-confirmed model defined in the <a href="04-anp-did-wba-name-space-specification.md">ANP DID:WBA Namespace Specification</a>:</p>
+<section id="appendix-b-handle-compatibility">
+<h4>Handle Compatibility</h4>
+<p>Native <code>did:web</code> can use <code>ANPHandleService</code> for Handle-based name binding in the did:wba network.</p>
+<p>When a <code>did:web</code> DID Document declares <code>ANPHandleService</code> in <code>service</code>, the verifier MAY perform a simple domain-based binding check using <code>ANPHandleService.serviceEndpoint</code>. This check is intended to confirm that the DID subject declares a Handle Provider domain; it does not require a particular global Agent Name Service design.</p>
 <ol>
 <li>Parse the Handle through the Handle Resolution Endpoint and obtain the DID;</li>
 <li>Parse the DID;</li>
-<li>Find <code>ANPHandleService</code> in DID Document;</li>
+<li>Find <code>ANPHandleService</code> in the DID Document;</li>
 <li>Extract the scheme and domain of <code>ANPHandleService.serviceEndpoint</code>;</li>
 <li>Verify that <code>serviceEndpoint</code> uses <code>https</code> and its domain is consistent with the domain of the input Handle.</li>
 </ol>
-<p>In compatibility mode, the role of <code>ANPHandleService.serviceEndpoint</code> remains domain-oriented: it is mainly used to declare the Handle Provider domain used by the DID subject, rather than requiring the declaration of a precise Handle Resolution Endpoint.</p>
-<p>Therefore, the reverse binding check for native <code>did:web</code>:</p>
+<p>In compatibility mode, <code>ANPHandleService.serviceEndpoint</code> is domain-oriented. It can point to the Handle Resolution Endpoint for the Handle, or to another stable HTTPS URL under the same Handle Provider domain.</p>
+<p>For native <code>did:web</code>, Handle binding verification relies on:</p>
 <ul>
-<li>Only compare the domain of <code>ANPHandleService.serviceEndpoint</code> with the domain of the input Handle;</li>
-<li>The path of <code>serviceEndpoint</code> is not required to be exactly the same as a specific Resolution Endpoint;</li>
-<li>There is no requirement that <code>serviceEndpoint</code> be exactly equal to <code>https://{domain}/.well-known/handle/{local-part}</code>;</li>
-<li>You can use the Resolution Endpoint corresponding to the Handle, or you can use other stable HTTPS URLs under the same domain.</li>
+<li>Handle → DID resolution result;</li>
+<li>The Handle Provider domain declared by <code>ANPHandleService.serviceEndpoint</code> in the DID Document;</li>
+<li>The normal <code>did:web</code> parsing and verification rules.</li>
 </ul>
-<p>For native <code>did:web</code>, two-way binding verification only relies on:</p>
-<ul>
-<li>Handle → DID parsing result;</li>
-<li>Statement of Name Service domain by <code>ANPHandleService</code> in DID Document;</li>
-</ul>
-
 </section>
 <section id="appendix-b-e2ee">
 <h4>End-to-End Encryption Compatibility</h4>
@@ -833,7 +826,7 @@ Cache-Control: no-store</code></pre>
 <p>Specifically:</p>
 <ul>
 <li><code>AgentDescription</code> is used to discover agent description documents that follow the <a href="07-anp-agent-description-protocol-specification.md">ANP Agent Description Protocol Specification</a>;</li>
-<li><code>ANPHandleService</code> is used to express, in compatibility mode, that the DID holder accepts the name binding relationship of a certain Handle Provider domain;</li>
+<li><code>ANPHandleService</code> is used to express, in compatibility mode, that the DID holder declares a Handle Provider domain through <code>ANPHandleService.serviceEndpoint</code>;</li>
 <li><code>ANPMessageService</code> is used to express the Unified Messaging and Interaction Portal for ANP's public discovery in DID documents.</li>
 </ul>
 <p>If the <code>ANPMessageService</code> entry declares <code>serviceDid</code>, this field is used to express "which DID this service uses for signing in cross-domain service-to-service HTTP authentication." For native <code>did:web</code> deployment:</p>
@@ -866,7 +859,7 @@ Cache-Control: no-store</code></pre>
 <ul>
 <li>Parsed according to <code>did:web</code> specification;</li>
 <li>Do not implement did:wba's unique path binding, public key fingerprint and proof enforcement rules;</li>
-<li>If <code>ANPHandleService</code> exists, perform the legacy domain-based name binding verification used by the <code>did:web</code> compatibility mode;</li>
+<li>If <code>ANPHandleService</code> exists, perform the domain-based Handle binding verification used by the <code>did:web</code> compatibility mode;</li>
 <li>If <code>ANPMessageService</code> exists, perform service discovery and capability selection according to the unified message entry semantics of ANP Profile 2;</li>
 <li>If <code>ANPMessageService</code> declares <code>serviceDid</code>, use this DID to complete cross-domain service-to-service identity authentication according to the rules of P8;</li>
 <li>You can still access did:wba's cross-platform identity authentication, Handle, ANP service discovery, E2EE and other upper-layer capabilities.</li>
