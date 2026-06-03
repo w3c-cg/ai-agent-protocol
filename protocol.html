@@ -157,11 +157,11 @@ wba-did      = wba-root-did / wba-path-did</code></pre>
 <ol>
 <li>The resolution method is consistent with the naked domain name entry of did:web: <code>did:wba:example.com</code> corresponds to <code>https://example.com/.well-known/did.json</code></li>
 <li>Naked domain name DID is mainly used to express "the entire domain name subject" or "domain-level service identity", rather than a specific user or sub-identity;</li>
-<li>In ANP's cross-domain service-to-service calls, if an <code>ANPMessageService</code> needs to declare its own DID for outer HTTP identity authentication, it <strong>SHOULD</strong> prefer the naked domain name DID;</li>
+<li>For domain-level service-to-service HTTP identity authentication, a service can use the naked domain name DID as its service identity, unless its application protocol defines a different binding;</li>
 <li>The naked domain name DID does not carry the <code>e1_</code> path binding fingerprint, so the path binding verification rules of this specification for the <code>e1_</code> path type DID do not apply;</li>
 <li>Its HTTP Message Signatures verification method is consistent with the similar usage of did:web: the verifier parses the DID, checks whether the verification method pointed to by <code>keyid</code> exists and is authorized by the <code>authentication</code> relationship, and then uses the corresponding public key to verify the request signature.</li>
 </ol>
-<p>See Appendix B for details on how native <code>did:web</code> participates in the above process in the same way in ANP.</p>
+<p>See the native <code>did:web</code> compatibility section for details on how native <code>did:web</code> identifiers can participate in the same authentication model.</p>
 </section>
 </section>
 <section id="did-wba-default-path-scheme-e1">
@@ -234,7 +234,7 @@ did:wba:example.com%3A3000:user:alice:e1_&lt;fingerprint&gt;</code></pre>
 <section id="did-wba-did-document-description">
 <h4>DID Document Description</h4>
 <p>Apart from DID Core, most related specifications are still in the draft stage. This section shows a subset of DID Documents used for authentication. To improve interoperability between systems, all fields marked as required must be supported by all systems, while fields marked as optional may be supported selectively. Fields defined in other standards but not listed here may also be supported selectively.</p>
-<p><strong>The recommended e1 path-type DID document example is as follows:</strong></p>
+<p><strong>The following e1 path-type DID document example includes core identity fields and optional illustrative service entries:</strong></p>
 <pre><code>{
   "@context": [
     "https://www.w3.org/ns/did/v1",
@@ -270,7 +270,7 @@ did:wba:example.com%3A3000:user:alice:e1_&lt;fingerprint&gt;</code></pre>
     {
       "id": "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;#ad",
       "type": "AgentDescription",
-      "serviceEndpoint": "https://agent-network-protocol.com/agents/example/ad.json"
+      "serviceEndpoint": "https://example.com/agents/alice/ad.json"
     },
     {
       "id": "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;#handle",
@@ -293,6 +293,7 @@ did:wba:example.com%3A3000:user:alice:e1_&lt;fingerprint&gt;</code></pre>
     "proofValue": "z..."
   }
 }</code></pre>
+<p class="note">The ANP-related service entries in this DID Document are illustrative examples only. ANP is an external protocol family and is distinct from this W3C Community Group protocol; their inclusion here does not require implementations of this specification to support ANP services.</p>
 <p><strong>Field explanation</strong>:</p>
 <ul>
 <li><strong>@context</strong>: required field, JSON-LD context defines the semantics and data model used in DID documents to ensure the understandability and interoperability of the document. <code>https://www.w3.org/ns/did/v1</code> is required. For e1 documents using the standard Ed25519 proof, <code>https://w3id.org/security/data-integrity/v2</code> and <code>https://w3id.org/security/multikey/v1</code> are also required. Others are added as needed.</li>
@@ -324,23 +325,16 @@ did:wba:example.com%3A3000:user:alice:e1_&lt;fingerprint&gt;</code></pre>
 <li><strong>service</strong>: Optional field that defines the list of services associated with the DID subject.
                 <ul>
 <li><strong>id</strong>: The unique identifier of the service.</li>
-<li><strong>type</strong>: Service type. Currently the following types are supported:
+<li><strong>type</strong>: Service type. Examples of service types that may appear in DID Documents include:
                     <ul>
-<li><code>AgentDescription</code>: agent description service. <code>serviceEndpoint</code> points to documents that comply with the <a href="/07-anp-agent-description-protocol-specification.md">ANP Agent Description Protocol Specification</a>.</li>
-<li><code>ANPHandleService</code>: Handle binding service, used for optional Handle-based name binding verification. <code>serviceEndpoint</code> MUST be a dereferenceable absolute HTTPS URI under the Handle Provider's domain.</li>
+<li><code>AgentDescription</code>: an agent description service. <code>serviceEndpoint</code> points to an agent description document, such as a document described by the <a href="#agent-description">Agent Description</a> section of this specification.</li>
+<li><code>ANPHandleService</code> and <code>ANPMessageService</code>: examples of service types used by the external ANP ecosystem. They are shown here only to illustrate that a DID Document can reference services defined by other protocols. This specification does not define these ANP service types, their endpoint formats, or their processing requirements. Implementations that do not support ANP may ignore these service entries according to local policy.</li>
 </ul>
 </li>
-</ul>
-</li>
-</ul>
-<ul>
-<li>When the DID holder is willing to disclose its Handle, <code>serviceEndpoint</code> SHOULD directly use the standard Resolution Endpoint of that Handle (such as <code>https://example.com/.well-known/handle/alice</code>).</li>
-<li>When the DID holder does not want to disclose its Handle in the DID Document, <code>serviceEndpoint</code> MAY point to a DID Confirmation Endpoint (such as <code>https://example.com/.well-known/handle/by-did?did=...</code>), which returns at least <code>did</code> and <code>confirmed = true</code>.</li>
-<li>When the returned document contains <code>handle</code> and it exactly matches the input Handle, the verifier can complete precise reverse verification for that specific Handle.</li>
-<li>When the returned document contains only confirmation information, the verifier can confirm only the provider relationship. It MUST NOT treat that result alone as meaning that a specific Handle has been verified as bound, especially in security-sensitive scenarios that require confirmation of a specific Handle.</li>
-<li><code>ANPMessageService</code>: ANP's unified service endpoint for instant messaging. If the DID subject participates in the ANP instant messaging protocol, <code>serviceEndpoint</code> <strong>MAY</strong> point to its unified ANP messaging endpoint; direct messaging, group messaging, key material access, attachment control, and other capabilities are carried by this single service endpoint. The specific methods and capability statements follow ANP Profile 2 and related Profiles. If the service needs to participate in cross-domain service-to-service calls, the service entry <strong>SHOULD</strong> additionally declare <code>serviceDid</code>, indicating which DID the service uses in the outer HTTP request signature. For did:wba deployments, a naked domain name DID (such as <code>did:wba:example.com</code> or <code>did:wba:example.com%3A8800</code>) should normally be used.</li>
 <li><strong>serviceEndpoint</strong>: The endpoint URL of the service.</li>
-<li><strong>serviceDid</strong>: Optional field. It is recommended to declare this field when the service participates in cross-domain service-to-service calls. Its value should be a DID string, not a DID URL, telling the peer "which DID's public key should be used to verify this outer HTTP request signature."</li>
+<li><strong>serviceDid</strong>: Optional field used by some service protocols to indicate which DID is used for service-level authentication. If a service protocol uses this field, its detailed semantics are defined by that service protocol, not by this specification.</li>
+</ul>
+</li>
 <li><strong>proof</strong>: For the default <code>e1_</code> profile, <code>proof</code> is a required field; for other profiles, whether this field appears is determined by the corresponding profile rules. <code>proof</code> is used to express the integrity proof of the DID Document, proving that the DID Document has not been tampered with after generating the proof, and indicating that the signer controlled the corresponding private key when the proof was created. Proof itself does not replace the DID method parsing process alone, nor does it alone replace the <code>id</code> consistency check.</li>
 <li>For the default e1 profile, this version defines <code>DataIntegrityProof</code> + <code>eddsa-jcs-2022</code> proof profiles based on W3C standards.</li>
 </ul>
@@ -744,7 +738,7 @@ Cache-Control: no-store</code></pre>
 <li>Cross-platform identity authentication (the cross-platform authentication sections)</li>
 <li>Handle-based name binding</li>
 <li>end-to-end encryption Communication (E2EE)</li>
-<li>ANP service discovery (including <code>AgentDescription</code> and <code>ANPMessageService</code>)</li>
+<li>Service discovery through DID service entries, such as <code>AgentDescription</code> or externally defined service types</li>
 </ul>
 <p>In compatibility mode, <code>did:web</code> continues to be created, parsed, and updated according to the <code>did:web</code> method specification; this appendix only defines how the did:wba network accepts and verifies native <code>did:web</code>.</p>
 </section>
@@ -778,30 +772,19 @@ Cache-Control: no-store</code></pre>
 </ol>
 <p>In compatibility mode, the identity binding semantics of <code>did:web</code> comes from the parsing result of <code>did:web</code> itself, rather than the path binding public key fingerprint of did:wba.</p>
 </section>
-<section id="appendix-b-handle-compatibility">
-<h4>Handle Compatibility</h4>
-<p>Native <code>did:web</code> can use <code>ANPHandleService</code> for Handle-based name binding in the did:wba network.</p>
-<p>When a <code>did:web</code> DID Document declares <code>ANPHandleService</code> in <code>service</code>, the verifier MAY perform a simple domain-based binding check using <code>ANPHandleService.serviceEndpoint</code>. This check is intended to confirm that the DID subject declares a Handle Provider domain; it does not require a particular global Agent Name Service design.</p>
-<ol>
-<li>Parse the Handle through the Handle Resolution Endpoint and obtain the DID;</li>
-<li>Parse the DID;</li>
-<li>Find <code>ANPHandleService</code> in the DID Document;</li>
-<li>Extract the scheme and domain of <code>ANPHandleService.serviceEndpoint</code>;</li>
-<li>Verify that <code>serviceEndpoint</code> uses <code>https</code> and its domain is consistent with the domain of the input Handle.</li>
-</ol>
-<p>In compatibility mode, <code>ANPHandleService.serviceEndpoint</code> is domain-oriented. It can point to the Handle Resolution Endpoint for the Handle, or to another stable HTTPS URL under the same Handle Provider domain.</p>
-<p>For native <code>did:web</code>, Handle binding verification relies on:</p>
+<section id="appendix-b-service-compatibility">
+<h4>Service Entry Compatibility</h4>
+<p>Native <code>did:web</code> DID Documents MAY include service entries for agent description, name binding, messaging, or other application-level functions. This specification only defines how the DID and its verification methods are parsed and verified; it does not require support for every service type that may appear in the <code>service</code> array.</p>
+<p>For example, an implementation might encounter the following service types:</p>
 <ul>
-<li>Handle → DID resolution result;</li>
-<li>The Handle Provider domain declared by <code>ANPHandleService.serviceEndpoint</code> in the DID Document;</li>
-<li>The normal <code>did:web</code> parsing and verification rules.</li>
+<li><code>AgentDescription</code>: a service entry that points to an agent description document.</li>
+<li><code>ANPHandleService</code> or <code>ANPMessageService</code>: examples of service types used by the external ANP ecosystem.</li>
 </ul>
+<p>The ANP service types above are illustrative examples only. ANP and this W3C Community Group protocol are distinct. This document does not define ANP endpoint formats, message flows, role models, capability negotiation, or the detailed semantics of fields such as <code>serviceDid</code>. Implementations MAY ignore unsupported service types, preserve them as metadata, or process them only when they explicitly implement the corresponding external protocol.</p>
 </section>
 <section id="appendix-b-e2ee">
 <h4>End-to-End Encryption Compatibility</h4>
-<p>Native <code>did:web</code> is compatible with end-to-end encryption communication in did:wba network.</p>
-<p>When a <code>did:web</code> DID Document contains identifiable <code>keyAgreement</code> entries, implementations MAY use these keys for key negotiation and encrypted communications per the upper-level instant messaging or E2EE protocols.</p>
-<p>If the upper layer protocol adopts ANP instant messaging related Profile, the discovery and access of public materials can also be completed through <code>ANPMessageService</code> declared in the DID Document; <code>did:web</code> is handled in the same way as <code>did:wba</code> at this point.</p>
+<p>Native <code>did:web</code> is compatible with end-to-end encryption when its DID Document contains suitable <code>keyAgreement</code> entries and the application-layer protocol defines how to use them.</p>
 <p>For example:</p>
 <ul>
 <li><code>X25519KeyAgreementKey2019</code></li>
@@ -811,40 +794,8 @@ Cache-Control: no-store</code></pre>
 <ol>
 <li>DID Document can be parsed successfully;</li>
 <li>The required <code>keyAgreement</code> verification method exists;</li>
-<li>If the ANP Profile used relies on Unified Messaging entry, there is available <code>ANPMessageService</code> in the DID Document;</li>
-<li>The upper layer protocol supports corresponding algorithms and public key representation methods.</li>
+<li>The upper layer protocol supports corresponding algorithms, public key representation methods, and message protection procedures.</li>
 </ol>
-</section>
-<section id="appendix-b-anp-service-discovery">
-<h4>ANP Service Discovery and <code>ANPMessageService</code> Compatibility</h4>
-<p>The native <code>did:web</code> DID Document can also (MAY) declare the service type in the did:wba network, for example:</p>
-<ul>
-<li><code>AgentDescription</code></li>
-<li><code>ANPHandleService</code></li>
-<li><code>ANPMessageService</code></li>
-</ul>
-<p>Specifically:</p>
-<ul>
-<li><code>AgentDescription</code> is used to discover agent description documents that follow the <a href="07-anp-agent-description-protocol-specification.md">ANP Agent Description Protocol Specification</a>;</li>
-<li><code>ANPHandleService</code> is used to express, in compatibility mode, that the DID holder declares a Handle Provider domain through <code>ANPHandleService.serviceEndpoint</code>;</li>
-<li><code>ANPMessageService</code> is used to express the Unified Messaging and Interaction Portal for ANP's public discovery in DID documents.</li>
-</ul>
-<p>If the <code>ANPMessageService</code> entry declares <code>serviceDid</code>, this field is used to express "which DID this service uses for signing in cross-domain service-to-service HTTP authentication." For native <code>did:web</code> deployment:</p>
-<ul>
-<li><code>serviceDid</code> <strong>SHOULD</strong> gives priority to naked domain name DID, such as <code>did:web:example.com</code>;</li>
-<li>The <code>keyid</code> in the outer HTTP <code>Signature-Input</code> belongs to a DID <strong>MUST</strong> consistent with the <code>serviceDid</code>;</li>
-<li>The verifier <strong>MUST</strong> parses the <code>serviceDid</code>, checks that the verification method pointed to by <code>keyid</code> is authorized by the <code>authentication</code> relationship, and verifies the request signature using its public key.</li>
-</ul>
-<p>If the native <code>did:web</code> subject participates in the ANP instant messaging protocol, then:</p>
-<ol>
-<li>The Agent DID document SHOULD contain at least one <code>ANPMessageService</code>;</li>
-<li>The Group DID document MUST contain at least one <code>ANPMessageService</code>;</li>
-<li>The same <code>ANPMessageService</code> can (MAY) simultaneously carry capabilities such as direct messaging, group messages, capability negotiation, security overlay public material access, and object control;</li>
-<li>Home Role, Key Role, Group Role, Join Role, Capability Role, and Object Role are the logical roles behind <code>ANPMessageService</code>, rather than additional independent standards <code>service.type</code> in the DID Document;</li>
-<li>If the service will participate in cross-domain service-to-service calls, its <code>ANPMessageService</code> entry SHOULD declare <code>serviceDid</code>;</li>
-<li>If multiple <code>ANPMessageService</code> exist, the caller SHOULD choose based on <code>profiles</code>, <code>securityProfiles</code>, <code>priority</code> or local policy.</li>
-</ol>
-<p>As long as these service entries are correctly declared in the DID Document, implementations can use these services per the application layer or message layer protocols of did:wba/ANP without requiring that the DID method be <code>did:wba</code>.</p>
 </section>
 <section id="appendix-b-implementation-recommendations">
 <h4>Implementation Recommendations</h4>
@@ -852,22 +803,19 @@ Cache-Control: no-store</code></pre>
 <ol>
 <li><strong>did:wba mode</strong>
 <ul>
-<li>Enforce full path binding, public key fingerprinting, and proof rules as per the master specification .</li>
+<li>Enforce full path binding, public key fingerprinting, and proof rules as per this specification.</li>
 </ul>
 </li>
 <li><strong>did:web compatibility mode</strong>
 <ul>
-<li>Parsed according to <code>did:web</code> specification;</li>
-<li>Do not implement did:wba's unique path binding, public key fingerprint and proof enforcement rules;</li>
-<li>If <code>ANPHandleService</code> exists, perform the domain-based Handle binding verification used by the <code>did:web</code> compatibility mode;</li>
-<li>If <code>ANPMessageService</code> exists, perform service discovery and capability selection according to the unified message entry semantics of ANP Profile 2;</li>
-<li>If <code>ANPMessageService</code> declares <code>serviceDid</code>, use this DID to complete cross-domain service-to-service identity authentication according to the rules of P8;</li>
-<li>You can still access did:wba's cross-platform identity authentication, Handle, ANP service discovery, E2EE and other upper-layer capabilities.</li>
+<li>Parse according to the <code>did:web</code> specification;</li>
+<li>Do not enforce did:wba-specific path binding, public key fingerprint, or proof rules on native <code>did:web</code> identifiers;</li>
+<li>When service entries exist, select only service types supported by the implementation or required by the application protocol;</li>
+<li>Unsupported external service types, including ANP-specific service examples, MAY be ignored or preserved as metadata according to local policy.</li>
 </ul>
 </li>
 </ol>
-<p>Application implementations SHOULD NOT deny participation in cross-domain authentication, Handle integration, <code>ANPMessageService</code> service discovery, or end-to-end encryption communication simply because it is native <code>did:web</code> and does not contain did:wba-specific path bindings or proofs.</p>
-<p>Application implementations SHOULD NOT require native <code>did:web</code> to expose independent DID service types for logical roles such as Home / Key / Group / Join / Capability / Object; if it exposes these capabilities through a single <code>ANPMessageService</code>, it should be regarded as compliant with the current service discovery model of ANP.</p>
+<p>Application implementations SHOULD NOT deny participation in cross-domain authentication or end-to-end encryption solely because a native <code>did:web</code> DID Document does not contain did:wba-specific path bindings or proofs.</p>
 <p>At the same time, if new deployments want stronger "path binding public key verifiability" and a unified standard proof experience, they should still (SHOULD) give priority to the <code>e1_</code> profile of the did:wba main specification.</p>
 </section>
 </section>
@@ -1096,23 +1044,23 @@ Cache-Control: no-store</code></pre>
   "@context": {
     "@vocab": "https://schema.org/",
     "did": "https://w3id.org/did#",
-    "ad": "https://agent-network-protocol.com/ad#"
+    "ad": "https://example.com/ns/agent-description#"
   },
   "@type": "CollectionPage",
-  "url": "https://agent-network-protocol.com/.well-known/agent-descriptions",
+  "url": "https://example.com/.well-known/agent-descriptions",
   "items": [
     {
       "@type": "ad:AgentDescription",
       "name": "Smart Assistant",
-      "@id": "https://agent-network-protocol.com/agents/smartassistant/ad.json"
+      "@id": "https://example.com/agents/smartassistant/ad.json"
     },
     {
       "@type": "ad:AgentDescription",
       "name": "Customer Support Agent",
-      "@id": "https://agent-network-protocol.com/agents/customersupport/ad.json"
+      "@id": "https://example.com/agents/customersupport/ad.json"
     }
   ],
-  "next": "https://agent-network-protocol.com/.well-known/agent-descriptions?page=2"
+  "next": "https://example.com/.well-known/agent-descriptions?page=2"
 }</code></pre>
         </div>
         
