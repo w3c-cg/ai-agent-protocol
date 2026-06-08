@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Agent Meeting Minutes"
+  short_description: "Create and publish CG minutes"
+  default_prompt: "Use this project-local skill to turn raw AI Agent Protocol CG notes into a meetings/YYYY-MM-DD.md minutes file, draft the mailing-list announcement text, then commit and push if requested."
