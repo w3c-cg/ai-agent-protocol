@@ -1133,6 +1133,37 @@ Cache-Control: no-store</code></pre>
       
     </section>
 
+    <section id="auditability">
+      <h2>Auditability</h2>
+      
+      <p>This section defines the evidentiary layer for agent actions: how an action's authorization, decision, and outcome are recorded so that any party can verify them after the fact without trusting the operator that produced the records.</p>
+      
+      <section id="accountability-record">
+        <h3>The Accountability Record</h3>
+        <p>An accountability record consists of three independently verifiable parts along the life of an action:</p>
+        <ul>
+          <li><strong>Commitment</strong>: states who was authorized to do what, under which delegation chain.</li>
+          <li><strong>Decision</strong>: states what authority, context, and evidence were evaluated at the moment of action, and binds the decision basis the agent applied.</li>
+          <li><strong>Receipt</strong>: states what occurred, signed after the fact, carrying a <code>result_class</code> of <code>success</code>, <code>partial_success</code>, <code>failure</code>, or <code>unknown</code>.</li>
+        </ul>
+        <p>Denial is recorded in the decision record, and out-of-scope effects in observed-outcome fields, so outcome classification remains unambiguous. Each part references the next by content hash and none embeds another, so an auditor can request only the layer it needs. Whether an underlying claim was true is referenced from a separate belief layer and is not inlined: these records carry admissibility evidence and do not assert truth. Serialization rides on W3C Verifiable Credentials linked by digest; no new envelope format is required.</p>
+      </section>
+      
+      <section id="action-ref-correlation">
+        <h3>Correlation Key (action-ref)</h3>
+        <p>The parts of an accountability record correlate through a key any verifier can recompute from disclosed intent alone: SHA-256 over the RFC 8785 (JCS) canonical form of <code>{action_type, agent_id, scope, timestamp}</code>.</p>
+        <ul>
+          <li><code>agent_id</code> is the executing agent's identifier after delegation resolution, not a display label.</li>
+          <li><code>scope</code> is the terminal executing agent's requested scope; requested-versus-authorized narrowing belongs in the chain and evidence records, where it can be disclosed when relevant, preserving the recompute-from-intent property.</li>
+          <li><code>timestamp</code> is an RFC 3339 UTC string with exactly three fractional digits, uppercase <code>T</code> and <code>Z</code>, one valid byte sequence per instant, hashed as opaque bytes. Systems carrying epoch-millisecond integers at the application layer convert to this string before hashing.</li>
+        </ul>
+        <p>This derivation is defined by this community-group text. APS (<code>draft-pidlisnyi-aps</code>) and argentum-core <code>action-ref-v1.0</code> are non-normative reference implementations, each with published conformance vectors.</p>
+      </section>
+      
+      <p class="note">Note: This section addresses the evidentiary provenance gap discussed in issue #34. Contributions refining the record shapes and the serialization annex are welcome.</p>
+      
+    </section>
+
     <section id="security-considerations">
       <h2>Security Considerations</h2>
       
