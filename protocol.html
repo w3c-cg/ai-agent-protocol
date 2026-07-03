@@ -421,6 +421,16 @@ did:wba:example.com%3A3000:user:alice:e1_&lt;fingerprint&gt;
 </ol>
 </blockquote>
 </section>
+<section id="did-wba-key-continuity">
+<h5>Key Continuity</h5>
+<p>Agents frequently exist in systems that already manage signing keys and identifiers. This section describes how such a system presents a stable DID while keys rotate underneath it, and how relying parties can follow a rotation. It applies to DIDs whose identifier does not bind a specific key: naked domain name DIDs and historical path-type DIDs without an <code>e1_</code> fingerprint segment. For <code>e1_</code> path-type DIDs, a binding key change necessarily produces a new DID as defined in the Update section; the transition statement below can also link the old and new DIDs during such a migration.</p>
+<ol>
+<li><strong>DID stability.</strong> A DID SHOULD remain stable across routine key rotation. Rotation is expressed by updating the DID document's <code>verificationMethod</code> entries and the references in <code>authentication</code> and <code>assertionMethod</code>, not by minting a new DID.</li>
+<li><strong>Key-identifying fragments.</strong> Verification method ids SHOULD identify concrete keys, for example by RFC 7638 JWK thumbprint: <code>did:wba:example.com:user:alice#&lt;thumbprint&gt;</code>. This gives implementations a stable place to attach key versions without destabilizing the DID itself, and reuses the same thumbprint construction this specification already relies on for <code>e1_</code> binding.</li>
+<li><strong>Key continuity attestation (optional).</strong> On rotation, the previous key MAY sign a transition statement covering the DID (or the old and new DIDs, when the identifier changes), the previous key thumbprint, the new key thumbprint, and a timestamp. A relying party that pinned the previous key can then accept the new key without out-of-band re-verification. If no attestation is available, verifiers fall back to normal DID resolution and their own trust policy. A transition statement is evidence of continuity, not proof of non-compromise; verifiers MAY still apply revocation or freshness policies.</li>
+<li><strong>System-native identifiers.</strong> Identifiers and version markers native to the underlying system SHOULD remain in system metadata rather than being encoded into the DID. Keeping them out of the DID is what keeps the DID stable across rotation and system-internal versioning.</li>
+</ol>
+</section>
 <section id="did-wba-deactivation">
 <h5>Deactivation</h5>
 <p>To delete a DID document, the <code>did.json</code> file must be removed or otherwise no longer publicly available.</p>
