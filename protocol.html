@@ -1185,6 +1185,56 @@ Cache-Control: no-store</code></pre>
       
     </section>
 
+    <section id="belief-state">
+      <h2>Belief State</h2>
+
+      <p>The accountability record (see Auditability) binds <em>who</em> acted and <em>what was decided</em>. It does not capture <em>what the agent had reason to believe</em> when it decided. This section defines a protocol-neutral vocabulary for that belief state, so a verifier can establish what evidential state a decision rested on &mdash; without trusting the operator that produced the records, and without the belief artifact asserting that what was believed was true.</p>
+
+      <section id="belief-state-artifact">
+        <h3>The Belief-State Artifact</h3>
+        <p>A belief state is a content-addressed, append-only journal of evidence, from which an assessment is <em>derived</em> rather than stored. It carries:</p>
+        <ul>
+          <li><strong>Propositions</strong>: abstract assertions, each the unit of belief. Multiple claims may accrue to one proposition.</li>
+          <li><strong>Evidence</strong>: claims attaching to propositions, each carrying its source, a likelihood-ratio input, modality, and grounding. Repeated confirmation from the same source contributes marginally, not multiply.</li>
+          <li><strong>Relations</strong>: typed directed edges between propositions &mdash; <code>supports</code>, <code>causes</code>, <code>counters</code>. A <code>counters</code> edge preserves a dispute structurally; it is never collapsed into a net score.</li>
+        </ul>
+        <p>Two properties keep the artifact verifier-reconstructible, mirroring the accountability layer's discipline of binding to recomputable inputs rather than derived outputs. First, the canonical content is the evidence journal, not the derived assessment: posterior confidence and source-independence counts are recomputed by a conformant reader and are never part of the hashed content, so implementations that differ in floating-point arithmetic still agree on the hash. Second, the belief state a decision references is a frozen journal prefix, not a live object: appending later evidence does not alter the prefix, which is what makes audit-to-date and replay sound.</p>
+      </section>
+
+      <section id="belief-state-ref">
+        <h3>Binding (belief_state_ref)</h3>
+        <p>A decision record MAY reference the belief state it evaluated through <code>belief_state_ref</code>, a single content hash expressed as <code>digestMultibase</code> over the RFC 8785 (JCS) canonical serialization of the belief-state journal prefix. The reference does not assert the belief artifact is true, complete, or sufficient; it binds the decision to the artifact evaluated.</p>
+        <p>The journal is an ordered list of evidence entries. Every field has one canonical type fixed by this text, so that two implementations produce the same hash:</p>
+        <ul>
+          <li><code>schema_version</code> &mdash; semver <code>major.minor.patch</code>, carried in the canonical content so the hash is over a versioned form and version-aware loaders negotiate compatibility.</li>
+          <li><code>proposition_id</code> &mdash; integer, stable within a journal.</li>
+          <li><code>assertion</code> &mdash; string, Unicode NFC-normalized before hashing.</li>
+          <li><code>voice</code> &mdash; string, a DID where available, not a display label.</li>
+          <li><code>lr</code> &mdash; likelihood-ratio input as a fixed-precision decimal string, not a float, for byte-stability.</li>
+          <li><code>modality</code> &mdash; one of <code>observation</code>, <code>reported_speech</code>, <code>allegation</code>, <code>opinion</code>.</li>
+          <li><code>entities</code> &mdash; array of strings, lexicographically ordered.</li>
+          <li><code>timestamp</code> &mdash; RFC 3339 UTC string, exactly three fractional digits, uppercase <code>T</code> and <code>Z</code> (<code>YYYY-MM-DDTHH:MM:SS.mmmZ</code>), matching the correlation key's timestamp rule.</li>
+          <li><code>relation</code> &mdash; <code>{child, parent, type}</code> where <code>type</code> is <code>supports</code>, <code>causes</code>, or <code>counters</code>.</li>
+        </ul>
+        <p>A verifier performs two checks: a <em>reconstruction</em> check that re-derives the assessment from the disclosed journal and confirms it matches the decision's claimed belief state, and a <em>binding</em> check that recomputes the hash over the canonical journal and confirms it equals the <code>belief_state_ref</code> carried on the decision record.</p>
+        <p class="note">Note: the canonical number form for <code>lr</code> (decimal-string precision versus scaled integer) and the string normalization for <code>assertion</code> are pending confirmation against the cem-ml canonical-serialization rules, so this layer adopts one canonical form rather than defining a parallel one. The forms shown are provisional pending that confirmation.</p>
+      </section>
+
+      <section id="belief-state-admissibility">
+        <h3>Admissibility, not truth</h3>
+        <p>A belief state records evidence-weighted confidence under contestation &mdash; what was believed, on what evidence, and what disputed it &mdash; never that the belief was correct. This is the same boundary the accountability records hold from the other side: those carry admissibility, not truth; this carries evidential state, not truth. Ground truth is the verifier's conclusion, asserted by neither layer.</p>
+        <p>A belief-state reference binds <em>what was thought</em> at a moment. It is distinct from an identity reference (<em>who has been thinking</em> &mdash; the accreted identity history) and from the credential (the answerable handle); the three remain separately typed. An agent with evolving beliefs is the same agent across many belief states.</p>
+      </section>
+
+      <section id="belief-state-impl">
+        <h3>Reference implementation (non-normative)</h3>
+        <p>Bella (<code>Recursive-Emergence/bella</code>) is one non-normative implementation: its append-only "gene" is the evidence journal, and its kernel derives the assessment (posterior mass, effective voice count, typed edges) from the gene; mass is computed, never stored &mdash; the property this section generalizes as "hash the journal, derive the assessment."</p>
+      </section>
+
+      <p class="note">Note: This section fills the belief-layer hook referenced by the Auditability section (issue #36, and the "separate belief layer" reference in issue #34). It is designed to sit immediately after the Auditability section.</p>
+
+    </section>
+
     <section id="security-considerations">
       <h2>Security Considerations</h2>
       
