@@ -108,16 +108,18 @@
 <h2>Agent Identity</h2>
 <section id="agent-identity-overview">
 <h3>Overview</h3>
-<p>The Agent Identity module defines how agents identify, authenticate, and establish trust across different platforms, organizations, and deployment environments. It uses Decentralized Identifiers (DIDs) as the core identity primitive and standardizes a Web-based DID method, <code>did:wba</code>, for agent-oriented interoperability.</p>
+<p>The Agent Identity module defines how agents identify, authenticate, and establish trust across different platforms, organizations, and deployment environments. It uses Decentralized Identifiers (DIDs) as the core identity primitive while remaining agnostic to the DID method used by an agent. This specification defines the Web-based <code>did:wba</code> method and a common Agent Identity layer in which <code>did:wba</code>, native <code>did:web</code>, and <code>did:webvh</code> identities can interoperate.</p>
 <p>The <code>did:wba</code> method is extended from <code>did:web</code>. It keeps the operational advantages of Web infrastructure while adding constraints for DID Document processing, path-based cryptographic binding, service discovery, and cross-platform authentication. The default path profile binds an Ed25519 public key fingerprint into the DID path through the <code>e1_</code> segment, strengthening the relationship between a DID and the private key controlled by the DID subject.</p>
-<p>Cross-platform authentication is based on HTTP Message Signatures and Digest Fields. A client signs the request using a verification method in its DID Document, and a server verifies both the client identity and the request-body integrity without requiring a proprietary identity federation.</p>
+<p>Cross-platform authentication is based on HTTP Message Signatures and Digest Fields. A client signs the request using a verification method in its DID Document. The server resolves and validates that document according to the identifier's DID method, verifies the authentication relationship, and verifies the request-body integrity without requiring a proprietary identity federation.</p>
 </section>
 <section id="agent-identity-design-principles">
 <h3>Design Principles</h3>
 <p>The design reuses mature Web infrastructure, including DNS, HTTPS, Web PKI, HTTP caching, and ordinary Web hosting, while preserving the decentralized identity model. Each platform may keep its own account and domain management system, but agents can still interoperate across platforms through resolvable DID Documents and standardized verification methods.</p>
-<p>For path-type DIDs, the DID path carries a binding public key fingerprint. This makes the relationship between the DID and the subject-controlled key independently verifiable. Even when a platform hosts the DID Document, a verifier can still compare the document key material with the fingerprint embedded in the DID path and detect silent key substitution.</p>
-<p>The DID string is treated as a verifiable cryptographic identifier rather than a stable human-readable name. When the binding key changes, the path-type DID changes as well. Stable user-facing references can be provided by an upper-layer Agent Name Service, similar to DNS, while the DID remains responsible for cryptographic verifiability.</p>
-<p>The method also provides a compatibility path for native <code>did:web</code>. A native <code>did:web</code> identifier can participate in authentication, Handle-based name binding, service discovery, and end-to-end encryption as long as it satisfies the compatibility rules defined in this section.</p>
+<p>The Agent Identity layer is DID-method-agnostic: common authentication and authorization behavior is defined independently of any one DID method, while creation, resolution, update, deactivation, and method-specific validation remain governed by the selected DID method. Method-specific security properties MUST NOT be assumed for identities created by another method.</p>
+<p>The DID method name encoded in the DID is authoritative. Implementations MUST determine the resolution and verification method from the DID itself and MUST NOT require duplicate metadata declaring the same method.</p>
+<p>For path-type <code>did:wba</code> DIDs using the default profile, the DID path carries a binding public key fingerprint. This makes the relationship between the DID and the subject-controlled key independently verifiable. Even when a platform hosts the DID Document, a verifier can still compare the document key material with the fingerprint embedded in the DID path and detect silent key substitution.</p>
+<p>A DID is treated as a verifiable identifier rather than a stable human-readable name. Rotation and persistence semantics depend on the DID method: for example, changing the binding key changes a path-type <code>did:wba</code> DID, while <code>did:webvh</code> represents authorized changes through its verifiable history. Stable user-facing references can be provided by an upper-layer Agent Name Service, similar to DNS.</p>
+<p>Native <code>did:web</code> and <code>did:webvh</code> identifiers can participate in authentication, Handle-based name binding, service discovery, and end-to-end encryption when they satisfy the common requirements and their respective method-specific rules defined in this section.</p>
 </section>
 
 <section id="did-wba-did-method-specification">
@@ -468,30 +470,62 @@ did:wba:example.com%3A3000:user:alice:e1_&lt;fingerprint&gt;
 
 </section>
 </section>
+<section id="did-method-compatibility">
+<h3>DID Method Compatibility</h3>
+<p>Agents MAY use different DID methods as their identity mechanism. A conforming Agent Identity implementation MUST support resolution and verification for the following DID methods:</p>
+<ul>
+<li><code>did:wba</code></li>
+<li><code>did:web</code></li>
+<li><code>did:webvh</code></li>
+</ul>
+<p>The Agent Protocol does not require all agents to use the same DID method. Interoperability is achieved through method-specific DID resolution followed by common DID Document and authentication-relationship verification. Implementations MAY support additional DID methods, but MUST apply the specification of the method encoded in each DID.</p>
+<p>The following examples illustrate the three supported DID methods:</p>
+<pre><code>did:wba:example.com:user:alice:e1_&lt;fingerprint&gt;
+did:web:example.com:agents:alice
+did:webvh:&lt;SCID&gt;:example.com:agents:alice</code></pre>
+<p>In the <code>did:webvh</code> example, <code>&lt;SCID&gt;</code> is the required self-certifying identifier defined by the <code>did:webvh</code> method; it precedes the domain name and path.</p>
+<section id="did-webvh-validation">
+<h4><code>did:webvh</code> Validation</h4>
+<p>For a <code>did:webvh</code> Agent Identity, an implementation MUST process the DID log according to the declared, supported version of the <code>did:webvh</code> method specification and derive the current DID Document only from a valid history. At a minimum, the resolver MUST validate the SCID, the ordered and hash-linked update chain, the authorization proofs for each applicable update, deactivation state, and any other method-version requirements before returning the current DID Document.</p>
+<p>A verifier MUST fail resolution when the history is incomplete, inconsistent, uses an unsupported method version, or fails a required proof or hash-chain check. It MUST NOT authenticate an agent from an unvalidated current-state document obtained by bypassing the DID history.</p>
+</section>
+</section>
 <section id="did-wba-cross-platform-http-authentication">
 <h3>Cross-Platform Identity Authentication over HTTP</h3>
-<p>When a client initiates a request to a server on a different platform, the client can use the domain name combined with TLS to authenticate the server, and the server verifies the client's identity based on the verification method in the client's DID document.</p>
+<p>When a client initiates a request to a server on a different platform, the client can use the domain name combined with TLS to authenticate the server, and the server verifies the client's identity based on an authentication verification method in the client's method-resolved DID Document.</p>
 <p>When the client makes the first HTTP request, it uses the <code>Signature-Input</code> and <code>Signature</code> headers defined by <a href="https://www.rfc-editor.org/rfc/rfc9421">RFC 9421</a> for signature; if the request carries a message body, it uses the <code>Content-Digest</code> header defined by <a href="https://www.rfc-editor.org/rfc/rfc9530">RFC 9530</a> to bind the integrity of the message body. After the first verification is passed, the server can return the access token, and the client will carry the access token in subsequent requests. The server does not need to verify the client's identity every time, but only needs to verify the access token.</p>
 <figure style="margin: 16px 0;">
 <pre><code>sequenceDiagram
     participant Agent A Client
     participant Agent B Server
-    participant Agent A DID Server
+    participant DID Resolver
 
     Note over Agent A Client,Agent B Server: First Request
     Agent A Client-&gt;&gt;Agent B Server: HTTP Request: Signature-Input, Signature, Content-Digest
-    Agent B Server-&gt;&gt;Agent A DID Server: Get DID Document
-    Agent A DID Server-&gt;&gt;Agent B Server: DID Document
+    Agent B Server-&gt;&gt;DID Resolver: Resolve DID using its method
+    DID Resolver-&gt;&gt;DID Resolver: Validate method-specific state or history
+    DID Resolver-&gt;&gt;Agent B Server: Validated DID Document
 
-    Note over Agent B Server: Authentication
+    Note over Agent B Server: Verify authentication relationship and HTTP signature
 
     Agent B Server-&gt;&gt;Agent A Client: HTTP Response: Authentication-Info(access token)
 
     Note over Agent A Client, Agent B Server: Subsequent Requests
     Agent A Client-&gt;&gt;Agent B Server: HTTP Request: Authorization(access token)
     Agent B Server-&gt;&gt;Agent A Client: HTTP Response</code></pre>
-<figcaption style="text-align: center; color: #555;">Cross-platform Identity Authentication Flow (did:wba over HTTP)</figcaption>
+<figcaption style="text-align: center; color: #555;">DID-method-agnostic Cross-platform Identity Authentication Flow over HTTP</figcaption>
 </figure>
+<section id="did-resolution">
+<h4>DID Resolution</h4>
+<p>Agents MUST resolve DID Documents according to the method-specific resolution rules identified by the DID in <code>keyid</code>. Resolver selection MUST be based on the method name encoded in the DID, not on separate descriptive metadata.</p>
+<ul>
+<li><strong><code>did:wba</code></strong>: Resolve the HTTPS <code>did.json</code> resource and apply the <code>did:wba</code> document, path-binding, and proof rules defined by this specification. A naked-domain DID uses <code>https://&lt;domain&gt;/.well-known/did.json</code>; a path-type DID uses the path transformation defined in the <code>did:wba</code> method section.</li>
+<li><strong><code>did:web</code></strong>: Resolve the HTTPS <code>did.json</code> resource according to the native <code>did:web</code> transformation rules. A naked-domain DID uses <code>/.well-known/did.json</code>, while a path DID resolves to <code>/&lt;path&gt;/did.json</code>.</li>
+<li><strong><code>did:webvh</code></strong>: Retrieve and process the method's <code>did.jsonl</code> log, validate the SCID and authorized update history, and derive the applicable DID Document according to the supported <code>did:webvh</code> method version.</li>
+</ul>
+<p>After method-specific resolution succeeds, the verifier MUST complete the method's identifier-consistency checks, confirm that the method has not reported the DID as deactivated, and verify that the verification method named by <code>keyid</code> exists and is authorized by the <code>authentication</code> relationship. Only then may the verifier use that verification method to authenticate the HTTP Message Signature.</p>
+<p>Resolution or validation failure MUST fail authentication. Implementations MUST NOT fall back to another DID method or use an unvalidated document merely because it contains a matching public key.</p>
+</section>
 <section id="did-wba-http-initial-request">
 <h4>Initial request</h4>
 <p>When the current client initiates an HTTP request to the server for the first time, it needs to perform identity authentication according to the following method.</p>
@@ -512,13 +546,13 @@ did:wba:example.com%3A3000:user:alice:e1_&lt;fingerprint&gt;
 </ul>
 <p>The key parameter requirements in <code>Signature-Input</code> are as follows:</p>
 <ul>
-<li><code>keyid</code>: MUST be a complete DID URL, pointing to a verification method in the DID document, for example: <code>did:wba:example.com:user:alice:e1_&lt;fingerprint&gt;#key-1</code></li>
+<li><code>keyid</code>: MUST be a complete DID URL pointing to a verification method in the DID Document, for example <code>did:wba:example.com:user:alice:e1_&lt;fingerprint&gt;#key-1</code>, <code>did:web:example.com:agents:alice#key-1</code>, or <code>did:webvh:&lt;SCID&gt;:example.com:agents:alice#key-1</code>.</li>
 <li><code>created</code>: MUST, indicating the signature creation time</li>
 <li><code>expires</code>: SHOULD, indicating the signature expiration time</li>
 <li><code>nonce</code>: MAY be carried; if <code>nonce</code> is given in the server challenge, the client MUST use that <code>nonce</code></li>
 <li><code>alg</code>: Non-required field. This specification does not mandate the use of the <code>alg</code> parameter, the verifier can determine the algorithm based on the DID verification method type pointed to by <code>keyid</code></li>
 </ul>
-<p>By default, the client SHOULD sign using the binding key corresponding to the last <code>e1_</code> fingerprint segment of the DID path. If the server allows other <code>authentication</code> verification methods, it belongs to the local authorization policy and does not change the binding semantics of DID.</p>
+<p>The client MUST sign with a key authorized by the DID Document's <code>authentication</code> relationship. For a path-type <code>did:wba</code> using the <code>e1_</code> profile, the client SHOULD sign using the binding key corresponding to the final fingerprint segment. Other DID methods use their own method-specific control and update model and MUST NOT be required to satisfy the <code>did:wba</code> path-binding rule.</p>
 <p>Client request example:</p>
 <pre><code>POST /orders HTTP/1.1
 Host: api.example.com
@@ -532,9 +566,9 @@ Signature: sig1=:BASE64_SIGNATURE:</code></pre>
 <h5>Signature generation process</h5>
 <ol>
 <li>If the HTTP request contains a message body, the client first calculates the <code>Content-Digest</code> value of the message body according to <a href="https://www.rfc-editor.org/rfc/rfc9530">RFC 9530</a>.</li>
-<li>Select the verification method to use for the signature. By default, binding keys for path-type DIDs should be used in preference.
+<li>Select a verification method authorized for <code>authentication</code> by the client's DID Document.
                   <ul>
-<li>If the DID uses the Ed25519 binding key represented by <code>Multikey</code> (corresponding to the <code>e1_</code> profile), it should be signed using the Ed25519 algorithm;</li>
+<li>If a path-type <code>did:wba</code> uses the Ed25519 binding key represented by <code>Multikey</code> (corresponding to the <code>e1_</code> profile), it SHOULD sign using that key and the Ed25519 algorithm;</li>
 <li>Other algorithms are defined by corresponding verification method types.</li>
 </ul>
 </li>
@@ -554,17 +588,19 @@ Signature: sig1=:BASE64_SIGNATURE:</code></pre>
 <li><strong>Verify request format</strong>: Check whether <code>Signature-Input</code> and <code>Signature</code> exist; when the request contains a message body, check whether <code>Content-Digest</code> exists.</li>
 <li><strong>Verify message body integrity</strong>: When the request contains a message body, verify whether <code>Content-Digest</code> is consistent with the actual message body according to <a href="https://www.rfc-editor.org/rfc/rfc9530">RFC 9530</a>.</li>
 <li><strong>Extract <code>keyid</code> and parse DID</strong>: Extract <code>keyid</code> from <code>Signature-Input</code> to obtain the corresponding DID and verification method.</li>
-<li><strong>Read DID document</strong>: Parse the DID document based on DID.</li>
-<li><strong>Verify DID binding relationship</strong>:
+<li><strong>Resolve and validate the DID Document</strong>: Select the resolver from the method name in the DID, execute the applicable method-specific resolution and validation rules, and reject resolution failures.</li>
+<li><strong>Verify the DID authentication relationship</strong>:
                   <ul>
 <li>Verify that the verification method pointed to by <code>keyid</code> exists;</li>
 <li>Verify that the verification method is authorized by the <code>authentication</code> relationship of the DID document;</li>
-<li>For <code>e1_</code> DID, the DID binding relationship must be verified based on the Ed25519 public key corresponding to <code>proof.verificationMethod</code> instead of randomly selecting an Ed25519 key in <code>authentication</code>:
+<li>For a <code>did:wba</code> DID using the <code>e1_</code> profile, the DID binding relationship MUST be verified based on the Ed25519 public key corresponding to <code>proof.verificationMethod</code> instead of randomly selecting an Ed25519 key in <code>authentication</code>:
                       <ul>
 <li><code>proof</code> must exist and pass <code>eddsa-jcs-2022</code> verification;</li>
 <li>Recalculate the RFC 7638 thumbprint using this public key, and the result MUST be exactly the same as the last <code>e1_</code> fingerprint segment of the DID path.</li>
 </ul>
 </li>
+<li>For <code>did:web</code>, MUST NOT apply <code>did:wba</code>-specific path-binding or proof requirements;</li>
+<li>For <code>did:webvh</code>, MUST validate the applicable DID history before using the resolved DID Document.</li>
 </ul>
 </li>
 <li><strong>Verify signature coverage</strong>: Rebuild the signature base based on <code>Signature-Input</code>, and verify that the HTTP components covered by the signature are consistent with the actual request.</li>
@@ -650,9 +686,10 @@ Signature: sig1=:BASE64_SIGNATURE:</code></pre>
 <p>When the server fails to verify the signature, <code>Content-Digest</code> fails to verify, the signature expires, there is a risk of replay, or the server requires the client to re-sign according to the challenge information, it can return a <code>401 Unauthorized</code> response.</p>
 <p>If the server requires that the client must use the <code>nonce</code> issued by the server for signature, it can return <code>401</code> when the client makes the first request and append the challenge information to the response. This adds an interaction that implementers can choose to use or not if needed.</p>
 <p>Error information is returned through the <code>WWW-Authenticate</code> header field, and the server can also indicate the components it expects to cover in the next request through <code>Accept-Signature</code>. Examples are as follows:</p>
-<pre><code>WWW-Authenticate: DIDWba realm="api.example.com", error="invalid_signature", error_description="Signature verification failed.", nonce="xyz987"
+<pre><code>WWW-Authenticate: AgentDID realm="api.example.com", error="invalid_signature", error_description="Signature verification failed.", nonce="xyz987"
 Accept-Signature: sig1=("@method" "@target-uri" "@authority" "content-digest");created;expires;nonce;keyid
 Cache-Control: no-store</code></pre>
+<p>The <code>AgentDID</code> authentication scheme name is method-neutral. The DID method is determined from the <code>keyid</code> value in <code>Signature-Input</code>.</p>
 <p>Contains the following fields:</p>
 <ul>
 <li><strong>realm</strong>: optional field, indicating the domain to which the protected resource belongs</li>
@@ -662,6 +699,8 @@ Cache-Control: no-store</code></pre>
 <li><code>invalid_nonce</code>: Nonce is used, is invalid, or does not match the server challenge</li>
 <li><code>invalid_timestamp</code>: timestamp out of range</li>
 <li><code>invalid_did</code>: The DID format is wrong, or the corresponding DID document cannot be found based on the DID.</li>
+<li><code>unsupported_did_method</code>: The DID method is not supported by the implementation.</li>
+<li><code>invalid_did_history</code>: Method-specific history validation, including <code>did:webvh</code> update-chain validation, failed.</li>
 <li><code>invalid_signature</code>: Signature verification failed</li>
 <li><code>invalid_verification_method</code>: Unable to find the corresponding public key based on <code>keyid</code></li>
 <li><code>invalid_content_digest</code>: <code>Content-Digest</code> does not match the message body</li>
@@ -684,7 +723,7 @@ Cache-Control: no-store</code></pre>
 <p>Privacy protection is very important in a decentralized network. For example, illegal software may record and track the user's behavior through the user's DID, causing the leakage of user privacy.</p>
 <p>In this regard, we suggest that DID providers can adopt a multi-DID strategy, that is, generate multiple DIDs for one user, each DID has different roles and permissions, and uses different key pairs to achieve privacy protection and fine-grained permission control.</p>
 <p>For example, a master DID is generated for the user. This DID generally does not change and is used in scenarios such as maintaining social relationships. Then a series of sub-DIDs are generated for the user, which can be used for shopping, ordering takeout, booking tickets and other scenarios. These sub-DIDs are subordinate to the main DID, and expired DIDs can be periodically deactivated and new DIDs applied to improve privacy and security protection.</p>
-<p>For scenarios that require stable external references but also want the underlying DID to be rotated, it is recommended to use an upper-layer Agent Name Service, similar to DNS: the stable agent name remains human-readable, and the underlying did:wba can rotate as the binding key changes.</p>
+<p>For scenarios that require stable external references while allowing the underlying DID or DID Document to evolve according to its method-specific lifecycle, it is recommended to use an upper-layer Agent Name Service, similar to DNS.</p>
 </section>
 <section id="did-wba-security-tips">
 <h3>Security Tips</h3>
@@ -693,9 +732,9 @@ Cache-Control: no-store</code></pre>
 <li><strong>Key Management</strong>
 <ul>
 <li>The private key corresponding to DID must be kept properly and must not be leaked. In addition, a mechanism for regularly refreshing the private key should be established.</li>
-<li>For path-based DIDs with the default path scheme, the binding key is best kept using hardware isolation, HSM, or the system enclave.</li>
-<li>By default, cross-platform authentication should prefer signing with a bound key.</li>
-<li>New deployments SHOULD prefer the <code>e1_</code> profile.</li>
+<li>For path-based <code>did:wba</code> DIDs with the default path scheme, the binding key is best kept using hardware isolation, HSM, or the system enclave.</li>
+<li>Cross-platform authentication MUST use a key authorized by the applicable DID Document's <code>authentication</code> relationship. A path-type <code>did:wba</code> identity should prefer its bound key.</li>
+<li>New <code>did:wba</code> path-type deployments SHOULD prefer the <code>e1_</code> profile.</li>
 <li>Users should generate multiple DIDs, each with different roles and permissions, and use different key pairs to achieve fine-grained permission control.</li>
 <li>When the binding key changes, the path-type DID will change with it, so upper-level Agent Name Service mappings should be updated synchronously.</li>
 </ul>
@@ -707,7 +746,7 @@ Cache-Control: no-store</code></pre>
 <li>When generating <code>nonce</code>, you <strong>must</strong> use a secure random number generator provided by the operating system, complying with modern cryptographic security specifications and standards. For example, you can use a module like Python's <code>secrets</code> to generate secure random numbers.</li>
 <li>When the request contains a message body, the server must verify <code>Content-Digest</code> to prevent the message body from being tampered with.</li>
 <li>Successful authentication does not equal successful authorization. The server must handle authorization judgment and identity authentication separately.</li>
-<li>For <code>e1_</code> DID, the parser MUST verify <code>DataIntegrityProof</code>; for other profiles, if the implementation enables DID Document proof verification, it SHOULD verify <code>proof</code> according to the corresponding profile rules.</li>
+<li>For a <code>did:wba</code> DID using the <code>e1_</code> profile, the parser MUST verify <code>DataIntegrityProof</code>. Other DID methods and profiles MUST be verified according to their own specifications and MUST NOT inherit this requirement merely by participating in the Agent Protocol.</li>
 </ul>
 </li>
 <li><strong>Transmission Security</strong>
@@ -729,18 +768,18 @@ Cache-Control: no-store</code></pre>
 </ol>
 </section>
 <section id="native-did-web-compatibility">
-<h3>Native <code>did:web</code> Compatibility</h3>
+<h3>Method-specific Compatibility Profiles</h3>
 <section id="appendix-b-objectives-and-scope">
-<h4>Objectives and Scope</h4>
-<p>This appendix defines the did:wba network compatibility mode for native <code>did:web</code>.</p>
-<p>The goal of the compatibility mode is to enable the native <code>did:web</code> to still access the capabilities defined in this specification without requiring the other party to migrate the DID to <code>did:wba</code>, including but not limited to:</p>
+<h4>Native <code>did:web</code>: Objectives and Scope</h4>
+<p>This section defines the Agent Protocol processing profile for native <code>did:web</code>.</p>
+<p>The goal of this profile is to enable native <code>did:web</code> identities to access the capabilities defined in this specification without migration to <code>did:wba</code>, including but not limited to:</p>
 <ul>
 <li>Cross-platform identity authentication (the cross-platform authentication sections)</li>
 <li>Handle-based name binding</li>
 <li>end-to-end encryption Communication (E2EE)</li>
 <li>Service discovery through DID service entries, such as <code>AgentDescription</code> or externally defined service types</li>
 </ul>
-<p>In compatibility mode, <code>did:web</code> continues to be created, parsed, and updated according to the <code>did:web</code> method specification; this appendix only defines how the did:wba network accepts and verifies native <code>did:web</code>.</p>
+<p><code>did:web</code> continues to be created, resolved, updated, and deactivated according to the <code>did:web</code> method specification. This section only defines how the common Agent Identity layer accepts and verifies native <code>did:web</code>.</p>
 </section>
 <section id="appendix-b-parsing-and-verification-rules">
 <h4>Parsing and Verification Rules</h4>
@@ -768,7 +807,7 @@ Cache-Control: no-store</code></pre>
 <li>The server must still parse the DID Document;</li>
 <li>The server must still verify that the verification method pointed to by <code>keyid</code> exists;</li>
 <li>The server MUST verify that the verification method is located in the <code>authentication</code> relationship of the DID Document;</li>
-<li>The subsequent HTTP Message Signatures / <code>Content-Digest</code> verification logic is the same as did:wba.</li>
+<li>The subsequent HTTP Message Signatures and <code>Content-Digest</code> verification use the common authentication process defined by this specification.</li>
 </ol>
 <p>In compatibility mode, the identity binding semantics of <code>did:web</code> comes from the parsing result of <code>did:web</code> itself, rather than the path binding public key fingerprint of did:wba.</p>
 </section>
@@ -797,9 +836,15 @@ Cache-Control: no-store</code></pre>
 <li>The upper layer protocol supports corresponding algorithms, public key representation methods, and message protection procedures.</li>
 </ol>
 </section>
+<section id="did-webvh-compatibility-profile">
+<h4><code>did:webvh</code> Compatibility Profile</h4>
+<p>A <code>did:webvh</code> identity participates in the same cross-platform authentication, service discovery, Handle-based name binding, and end-to-end encryption capabilities as another supported Agent Identity, subject to the capabilities declared in its resolved DID Document.</p>
+<p>Before using a <code>did:webvh</code> verification method, the implementation MUST complete the <a href="#did-webvh-validation"><code>did:webvh</code> history validation</a> required by this specification. The verification method named by <code>keyid</code> MUST exist in the document derived for the applicable version and MUST be authorized by its <code>authentication</code> relationship.</p>
+<p><code>did:wba</code>-specific <code>e1_</code> path-binding and DID Document proof rules MUST NOT be applied to <code>did:webvh</code>. The <code>did:webvh</code> SCID, update authorization, version, witness, portability, and deactivation semantics are instead governed by the supported version of the <code>did:webvh</code> method specification.</p>
+</section>
 <section id="appendix-b-implementation-recommendations">
 <h4>Implementation Recommendations</h4>
-<p>Implementers SHOULD distinguish between two parsing modes:</p>
+<p>Implementers MUST distinguish between the following resolution and verification modes:</p>
 <ol>
 <li><strong>did:wba mode</strong>
 <ul>
@@ -814,9 +859,16 @@ Cache-Control: no-store</code></pre>
 <li>Unsupported external service types, including ANP-specific service examples, MAY be ignored or preserved as metadata according to local policy.</li>
 </ul>
 </li>
+<li><strong>did:webvh mode</strong>
+<ul>
+<li>Resolve and validate the DID log according to a supported <code>did:webvh</code> method version;</li>
+<li>Reject an invalid history rather than using an unvalidated current-state DID Document;</li>
+<li>Do not enforce <code>did:wba</code>-specific path-binding or proof rules.</li>
+</ul>
+</li>
 </ol>
-<p>Application implementations SHOULD NOT deny participation in cross-domain authentication or end-to-end encryption solely because a native <code>did:web</code> DID Document does not contain did:wba-specific path bindings or proofs.</p>
-<p>At the same time, if new deployments want stronger "path binding public key verifiability" and a unified standard proof experience, they should still (SHOULD) give priority to the <code>e1_</code> profile of the did:wba main specification.</p>
+<p>Application implementations MUST NOT deny participation in cross-domain authentication or end-to-end encryption solely because a valid <code>did:web</code> or <code>did:webvh</code> identity does not contain <code>did:wba</code>-specific path bindings or proofs.</p>
+<p>Deployments should select a DID method based on the required trust and lifecycle properties. The <code>did:wba</code> <code>e1_</code> profile provides path-to-key binding, native <code>did:web</code> provides simple Web-hosted resolution, and <code>did:webvh</code> provides a self-certifying identifier and verifiable update history.</p>
 </section>
 </section>
 </section>
@@ -845,7 +897,7 @@ Cache-Control: no-store</code></pre>
   },
   "@type": "ad:AgentDescription",
   "name": "SmartAssistant",
-  "did": "did:wba:agent.example.com:alice",
+  "did": "did:web:agent.example.com:agents:alice",
   "description": "An intelligent agent providing natural language processing capabilities",
   "version": "1.0.0",
   "interfaces": [
@@ -1111,7 +1163,7 @@ Cache-Control: no-store</code></pre>
         
         <ol>
           <li><strong>Content Validation</strong>: Search services should verify the validity and integrity of agent description documents</li>
-          <li><strong>DID Authentication</strong>: Use the did:wba method for identity authentication, ensuring the authenticity of agent identities</li>
+          <li><strong>DID Authentication</strong>: Use a supported Agent Identity method (<code>did:wba</code>, <code>did:web</code>, or <code>did:webvh</code>) and apply its method-specific resolution and verification rules before authenticating an agent</li>
           <li><strong>Rate Limiting</strong>: Implement appropriate rate limiting measures to prevent malicious requests and DoS attacks</li>
           <li><strong>Permission Control</strong>: Distinguish between public and private agents, only including public agents in discovery documents</li>
         </ol>
@@ -1124,7 +1176,7 @@ Cache-Control: no-store</code></pre>
         
         <ol>
           <li><strong>Agent Description Protocol</strong>: The discovery protocol provides indexing and access mechanisms for description documents</li>
-          <li><strong>DID:WBA Method</strong>: Provides identity authentication and security guarantees</li>
+          <li><strong>Agent Identity</strong>: Provides method-agnostic identity authentication with method-specific guarantees for <code>did:wba</code>, <code>did:web</code>, and <code>did:webvh</code></li>
           <li><strong>Meta-Protocol</strong>: In agent communication, protocol negotiation can be based on discovery results</li>
         </ol>
       </section>
