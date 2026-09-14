@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>did:wba DID Method Specification</title>
+    <script src="https://www.w3.org/Tools/respec/respec-w3c" class="remove"></script>
+    <script class="remove">
+      var respecConfig = {
+        specStatus: "CG-DRAFT",
+        shortName: "did-wba",
+        editors: [
+          {
+            name: "Gaowei Chang",
+            company: "ANP Open Source Community",
+            companyURL: "https://agent-network-protocol.com/"
+          }
+        ],
+        authors: [],
+        group: "cg/agentprotocol",
+        github: "w3c-cg/ai-agent-protocol"
+      };
+    </script>
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      table, th, td {
+        border: 1px solid black;
+      }
+      th, td {
+        padding: 0.5rem;
+        vertical-align: top;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+        font-variant: normal;
+        text-transform: none;
+        letter-spacing: normal;
+      }
+    </style>
+  </head>
+  <body>
+    <section id="abstract">
+      <h2>Abstract</h2>
+      <p>
+        This specification defines the <code>did:wba</code> DID method. The method
+        uses HTTPS-hosted DID Documents and supports both domain-level identifiers
+        and path-type identifiers. The default path profile binds an Ed25519 public
+        key fingerprint into the final DID path segment using the <code>e1_</code>
+        prefix and requires a corresponding Data Integrity proof in the DID Document.
+      </p>
+    </section>
+
+    <section id="sotd"></section>
+
+    <section id="introduction">
+      <h2>Introduction</h2>
+      <p>
+        The <code>did:wba</code> method reuses DNS, HTTPS, Web PKI, ordinary Web
+        hosting, and HTTP caching. It is derived from the operational model of
+        <code>did:web</code> and adds method-specific rules for path-to-key binding,
+        DID Document processing, and the default <code>e1_</code> proof profile.
+      </p>
+      <p>
+        This document defines the DID method lifecycle: identifier syntax, creation,
+        resolution, update, and deactivation. Use of a resolved <code>did:wba</code>
+        identity for agent HTTP authentication is defined by
+        <a href="agent-identity.html">Agent Identity and HTTP Authentication</a>
+        and the
+        <a href="did-method-profiles.html#did-wba-binding-profile">
+          <code>did:wba</code> Binding Profile
+        </a>.
+      </p>
+    </section>
+
+    <section id="conformance">
+      <h2>Conformance</h2>
+      <p>
+        As well as sections marked as non-normative, all authoring guidelines,
+        diagrams, examples, and notes in this specification are non-normative.
+        Everything else in this specification is normative.
+      </p>
+      <p>
+        The key words MAY, MUST, MUST NOT, SHOULD, and SHOULD NOT in this document
+        are to be interpreted as described in
+        <a href="https://www.rfc-editor.org/rfc/rfc2119">RFC 2119</a> and
+        <a href="https://www.rfc-editor.org/rfc/rfc8174">RFC 8174</a> when, and
+        only when, they appear in all capitals.
+      </p>
+    </section>
+
+    <section id="did-wba-did-method-specification">
+      <h2><code>did:wba</code> DID Method Specification</h2>
+
+      <section id="did-wba-method-name">
+        <h3>Method Name</h3>
+        <p>
+          The method name is <code>wba</code>. DIDs using this method MUST begin with
+          the lowercase prefix <code>did:wba:</code>.
+        </p>
+      </section>
+
+      <section id="did-wba-method-specific-identifiers">
+        <h3>Method-Specific Identifier</h3>
+        <p>
+          The method-specific identifier begins with a fully qualified domain name
+          protected by TLS and MAY contain a path to the DID Document. Domain names
+          are governed by
+          <a href="https://www.rfc-editor.org/rfc/rfc1035">RFC 1035</a>,
+          <a href="https://www.rfc-editor.org/rfc/rfc1123">RFC 1123</a>, and
+          <a href="https://www.rfc-editor.org/rfc/rfc2181">RFC 2181</a>.
+        </p>
+        <p>
+          TLS service identity matching MUST use the DNS identifier
+          (<code>dNSName</code>) in the certificate's
+          <code>subjectAltName</code> extension. Implementations MUST NOT rely on
+          Common Name as the service identity.
+        </p>
+        <p>
+          A <code>did:wba</code> method-specific identifier MUST NOT contain an IP
+          address. A port MAY be included, but the colon between host and port MUST
+          be percent-encoded as <code>%3A</code>. Optional directories and
+          subdirectories are encoded as colon-separated path segments.
+        </p>
+        <p>The method supports two DID forms:</p>
+        <ol>
+          <li>
+            <strong>Naked-domain DID:</strong> identifies the domain subject or a
+            domain-level service identity.
+          </li>
+          <li>
+            <strong>Path-type DID:</strong> identifies a user, agent, service, or
+            other sub-identity beneath the domain.
+          </li>
+        </ol>
+        <p>
+          For newly created path-type DIDs, this specification defines a default
+          profile in which the final path segment contains the binding public-key
+          fingerprint. Earlier path segments are application-defined namespaces,
+          such as <code>user:alice</code> or <code>agents:billing</code>.
+        </p>
+
+        <section id="did-wba-syntax">
+          <h4>Syntax</h4>
+          <pre><code>base64url-char = ALPHA / DIGIT / "-" / "_"
+path-segment   = 1*(ALPHA / DIGIT / "-" / "_" / ".")
+e1-fingerprint = "e1_" 43base64url-char
+
+wba-root-did = "did:wba:" domain-name
+wba-path-did = "did:wba:" domain-name 1*(":" path-segment) ":" e1-fingerprint
+wba-did      = wba-root-did / wba-path-did</code></pre>
+          <p>
+            This version of the method specification defines only
+            <code>e1_</code> as the default path-binding profile prefix.
+          </p>
+        </section>
+
+        <section id="did-wba-naked-domain-did">
+          <h4>Naked-Domain DID</h4>
+          <p>
+            A naked-domain DID has the form <code>did:wba:{domain}</code> and
+            resolves to <code>https://{domain}/.well-known/did.json</code>.
+          </p>
+          <ul>
+            <li>
+              It primarily represents the entire domain subject or a domain-level
+              service identity rather than a specific user or sub-identity.
+            </li>
+            <li>
+              It does not carry an <code>e1_</code> fingerprint. The path-binding
+              validation rules defined for an <code>e1_</code> path-type DID do not
+              apply.
+            </li>
+            <li>
+              Authentication uses a verification method in the resolved DID
+              Document according to the applicable upper-layer protocol.
+            </li>
+          </ul>
+          <p>
+            Native <code>did:web</code> interoperability is defined separately in
+            the
+            <a href="did-method-profiles.html#did-web-binding-profile">
+              <code>did:web</code> Binding Profile
+            </a>.
+          </p>
+        </section>
+      </section>
+
+      <section id="did-wba-default-path-scheme-e1">
+        <h3>Default Path Profile: <code>e1_</code></h3>
+        <p>
+          For a newly created path-type <code>did:wba</code>, the final path segment
+          MUST be an <code>e1_</code> binding public-key fingerprint. The
+          <code>e1_</code> prefix identifies an Ed25519 binding key and the default
+          profile defined by this document.
+        </p>
+        <p>The recommended structure is:</p>
+        <pre><code>did:wba:{domain}:{namespace...}:{e1-fingerprint}</code></pre>
+        <p>Examples:</p>
+        <pre class="example"><code>did:wba:example.com
+did:wba:example.com:user:alice:e1_&lt;fingerprint&gt;
+did:wba:example.com%3A3000:user:alice:e1_&lt;fingerprint&gt;</code></pre>
+        <p>
+          For compatibility with existing deployments, an implementation MAY parse
+          a historical path-type DID without a fingerprint segment. Newly created
+          path-type DIDs SHOULD use the default profile defined here.
+        </p>
+      </section>
+
+      <section id="did-wba-e1-fingerprint-generation">
+        <h3><code>e1_</code> Fingerprint Generation</h3>
+        <p>
+          The <code>e1_</code> fingerprint binds a path-type DID to an Ed25519
+          public key. It is generated as follows:
+        </p>
+        <ol>
+          <li>
+            Select a binding key that:
+            <ul>
+              <li>is an Ed25519 public key;</li>
+              <li>is represented as <code>Multikey</code> with <code>publicKeyMultibase</code>;</li>
+              <li>is authorized by the DID Document's <code>authentication</code> relationship.</li>
+            </ul>
+          </li>
+          <li>
+            Convert the Ed25519 <code>publicKeyMultibase</code> to the equivalent
+            public JWK containing only the members required by RFC 7638:
+          </li>
+        </ol>
+        <pre><code>{
+  "crv": "Ed25519",
+  "kty": "OKP",
+  "x": "..."
+}</code></pre>
+        <p>
+          The <code>publicKeyMultibase</code> value is a Multibase base58-btc encoded
+          Ed25519 Multikey. After Multikey decoding, <code>x</code> is the unpadded
+          base64url encoding of the raw 32-byte Ed25519 public key.
+        </p>
+        <ol start="3">
+          <li>
+            Construct the JWK Thumbprint input according to
+            <a href="https://www.rfc-editor.org/rfc/rfc7638">RFC 7638</a>:
+            retain only the required members, sort member names lexicographically,
+            serialize without additional whitespace, and encode as UTF-8.
+          </li>
+          <li>Calculate the SHA-256 digest of the UTF-8 byte sequence.</li>
+          <li>
+            Base64url-encode the 32-byte digest without padding. The result is 43
+            characters.
+          </li>
+          <li>Prefix the result with <code>e1_</code>.</li>
+        </ol>
+        <p class="note">
+          The <code>e1_</code> prefix is a profile identifier and is not part of the
+          hash output. Implementations may use the 43-character thumbprint as a
+          verification-method fragment or key identifier to make the relationship
+          visible to operators.
+        </p>
+      </section>
+
+      <section id="did-wba-key-material-and-document-processing">
+        <h3>Key Material and DID Document Processing</h3>
+        <p>
+          A <code>did:wba</code> DID Document will commonly be served as
+          <code>application/json</code>. A resolver MUST apply the following rules:
+        </p>
+        <ol>
+          <li>
+            If <code>@context</code> is present, process the document according to
+            JSON-LD. Reject the document if JSON-LD processing fails.
+          </li>
+          <li>
+            When the context contains <code>https://www.w3.org/ns/did/v1</code>,
+            process the result as a DID Document according to DID Core.
+          </li>
+          <li>
+            If <code>@context</code> is absent, process the document using the JSON
+            representation rules defined by DID Core.
+          </li>
+          <li>
+            References to external resources, external DIDs, and
+            <code>serviceEndpoint</code> values MUST use absolute URIs.
+          </li>
+          <li>
+            References to verification methods in the same DID Document MAY use
+            relative DID URLs such as <code>#key-1</code> and MUST be expanded
+            against the document's root DID before use.
+          </li>
+        </ol>
+      </section>
+
+      <section id="did-wba-did-document-description">
+        <h3>DID Document</h3>
+        <p>
+          The following example shows the subset of a DID Document used by the
+          default <code>e1_</code> profile. Application-specific service entries are
+          illustrative and non-normative.
+        </p>
+        <pre class="example"><code>{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/data-integrity/v2",
+    "https://w3id.org/security/multikey/v1",
+    "https://w3id.org/security/suites/x25519-2019/v1"
+  ],
+  "id": "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;",
+  "verificationMethod": [
+    {
+      "id": "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;#key-1",
+      "type": "Multikey",
+      "controller": "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;",
+      "publicKeyMultibase": "z6Mk..."
+    },
+    {
+      "id": "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;#key-x25519-1",
+      "type": "X25519KeyAgreementKey2019",
+      "controller": "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;",
+      "publicKeyMultibase": "z9hFgmPVfmBZwRvFEyniQDBkz9LmV7gDEqytWyGZLmDXE"
+    }
+  ],
+  "authentication": [
+    "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;#key-1"
+  ],
+  "assertionMethod": [
+    "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;#key-1"
+  ],
+  "keyAgreement": [
+    "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;#key-x25519-1"
+  ],
+  "service": [
+    {
+      "id": "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;#ad",
+      "type": "AgentDescription",
+      "serviceEndpoint": "https://example.com/agents/alice/ad.json"
+    },
+    {
+      "id": "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;#handle",
+      "type": "ANPHandleService",
+      "serviceEndpoint": "https://example.com/.well-known/handle/alice"
+    },
+    {
+      "id": "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;#anp",
+      "type": "ANPMessageService",
+      "serviceEndpoint": "https://example.com/anp",
+      "serviceDid": "did:wba:example.com%3A8800"
+    }
+  ],
+  "proof": {
+    "type": "DataIntegrityProof",
+    "cryptosuite": "eddsa-jcs-2022",
+    "created": "2025-01-01T00:00:00Z",
+    "verificationMethod": "did:wba:example.com%3A8800:user:alice:e1_&lt;fingerprint&gt;#key-1",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z..."
+  }
+}</code></pre>
+        <p class="note">
+          <code>ANPHandleService</code> and <code>ANPMessageService</code> are examples
+          defined by an external protocol ecosystem. This DID method specification
+          does not define their endpoint formats or processing requirements.
+        </p>
+
+        <section id="did-wba-document-fields">
+          <h4>Field Requirements</h4>
+          <ul>
+            <li>
+              <strong><code>@context</code>:</strong> REQUIRED for the JSON-LD
+              representation. It MUST include
+              <code>https://www.w3.org/ns/did/v1</code>. The default
+              <code>e1_</code> proof profile also requires the Data Integrity and
+              Multikey contexts used by the proof and binding key.
+            </li>
+            <li>
+              <strong><code>id</code>:</strong> REQUIRED and MUST exactly match the
+              resolved <code>did:wba</code> DID. The host MUST NOT be an IP address.
+            </li>
+            <li>
+              <strong><code>verificationMethod</code>:</strong> REQUIRED. A
+              path-type DID using the default profile MUST contain at least one
+              Ed25519 <code>Multikey</code> whose RFC 7638 thumbprint equals the
+              final <code>e1_</code> fingerprint segment.
+            </li>
+            <li>
+              <strong><code>authentication</code>:</strong> REQUIRED. The default
+              profile's binding key MUST be authorized by this relationship.
+            </li>
+            <li>
+              <strong><code>assertionMethod</code>:</strong> REQUIRED when the
+              verification method is used for the default DID Document proof. The
+              proof verification method MUST be authorized by this relationship.
+            </li>
+            <li>
+              <strong><code>keyAgreement</code>:</strong> OPTIONAL. It may contain
+              X25519 or other key-agreement material used by an upper-layer secure
+              messaging protocol. This DID method does not define the E2EE procedure.
+            </li>
+            <li>
+              <strong><code>service</code>:</strong> OPTIONAL. Service semantics are
+              defined by the specification that defines each service type.
+            </li>
+            <li>
+              <strong><code>proof</code>:</strong> REQUIRED for the default
+              <code>e1_</code> profile. Its requirements are defined in
+              <a href="#did-wba-document-proof">DID Document Proof</a>.
+            </li>
+          </ul>
+        </section>
+
+        <section id="did-wba-key-separation">
+          <h4>Key Separation</h4>
+          <p>
+            Implementations supporting encrypted communication SHOULD manage
+            signature/assertion keys and key-agreement keys separately. A signing
+            key SHOULD NOT be used for key agreement, and a key-agreement key SHOULD
+            NOT be used for signatures. The upper-layer protocol defines how
+            <code>keyAgreement</code> material is used.
+          </p>
+        </section>
+      </section>
+
+      <section id="did-wba-did-method-operation">
+        <h3>DID Method Operations</h3>
+
+        <section id="did-wba-create-register">
+          <h4>Create</h4>
+          <p>
+            This method does not define a registration HTTP API. Programmatic
+            registration and management are deployment-specific.
+          </p>
+          <p>Creating a DID requires the controller to:</p>
+          <ol>
+            <li>control the domain name used by the DID;</li>
+            <li>configure DNS and an HTTPS hosting service for that domain;</li>
+            <li>
+              for a path-type DID, generate the Ed25519 binding key and calculate
+              the <code>e1_</code> fingerprint;
+            </li>
+            <li>
+              create a conforming DID Document and publish it at the URL derived
+              from the DID.
+            </li>
+          </ol>
+          <p>Naked-domain example:</p>
+          <pre class="example"><code>did:wba:example.com
+ -&gt; https://example.com/.well-known/did.json</code></pre>
+          <p>Path-type example:</p>
+          <pre class="example"><code>did:wba:example.com:user:alice:e1_&lt;fingerprint&gt;
+ -&gt; https://example.com/user/alice/e1_&lt;fingerprint&gt;/did.json</code></pre>
+          <p>Path-type example with a port:</p>
+          <pre class="example"><code>did:wba:example.com%3A3000:user:alice:e1_&lt;fingerprint&gt;
+ -&gt; https://example.com:3000/user/alice/e1_&lt;fingerprint&gt;/did.json</code></pre>
+        </section>
+
+        <section id="did-wba-reading-parsing">
+          <h4>Read and Resolve</h4>
+          <p>A resolver MUST:</p>
+          <ol>
+            <li>remove the <code>did:wba:</code> prefix;</li>
+            <li>transform colon-separated path segments into slash-separated URL path segments;</li>
+            <li>percent-decode an encoded port separator in the authority;</li>
+            <li>prepend <code>https://</code>;</li>
+            <li>append <code>/.well-known</code> when the DID contains no path;</li>
+            <li>append <code>/did.json</code>;</li>
+            <li>retrieve the resource over a secure HTTPS connection;</li>
+            <li>verify that the DID Document <code>id</code> matches the requested DID;</li>
+            <li>apply the profile-specific validation rules below.</li>
+          </ol>
+          <p>
+            For an <code>e1_</code> path-type DID, the resolver MUST:
+          </p>
+          <ul>
+            <li>require a top-level DID Document <code>proof</code>;</li>
+            <li>verify the <code>DataIntegrityProof</code> with <code>eddsa-jcs-2022</code>;</li>
+            <li>
+              verify that <code>proof.verificationMethod</code> identifies an Ed25519
+              <code>Multikey</code>, or a semantically equivalent Ed25519 verification
+              method representation permitted by the profile;
+            </li>
+            <li>
+              recalculate the RFC 7638 thumbprint of that public key and verify that
+              it exactly matches the final <code>e1_</code> fingerprint segment.
+            </li>
+          </ul>
+          <p>
+            The <code>e1_</code> proof and path-binding checks are mandatory and are
+            not controlled by a relaxed local policy switch.
+          </p>
+          <p>
+            For a naked-domain DID, the resolver retrieves
+            <code>/.well-known/did.json</code>, verifies identifier consistency, and
+            processes the DID Document according to DID Core. The
+            <code>e1_</code> path-binding rule does not apply.
+          </p>
+          <p>
+            Resolvers SHOULD use privacy-preserving DNS resolution where appropriate
+            and MUST apply secure TLS service identity validation.
+          </p>
+        </section>
+
+        <section id="did-wba-update">
+          <h4>Update</h4>
+          <p>
+            A controller updates a DID by updating the <code>did.json</code> resource
+            corresponding to that DID.
+          </p>
+          <p>
+            For a path-type DID using the default profile, the DID remains unchanged
+            while the binding-key fingerprint remains unchanged. Other DID Document
+            content may be updated, including additional verification methods,
+            removal of old non-binding keys, and service endpoints.
+          </p>
+          <p>
+            If the binding key changes, the path-type DID MUST change to contain the
+            new fingerprint. The controller SHOULD create a new DID Document and MAY
+            use an upper-layer naming or migration mechanism to maintain a stable
+            external reference.
+          </p>
+          <p class="note">
+            Version control and continuous integration may provide operational audit
+            history, but such history is not part of the cryptographic method state
+            unless defined by a separate profile.
+          </p>
+        </section>
+
+        <section id="did-wba-deactivation">
+          <h4>Deactivate</h4>
+          <p>
+            A controller deactivates a DID by removing the corresponding
+            <code>did.json</code> resource or otherwise making it permanently
+            unavailable as an active DID Document.
+          </p>
+          <p>
+            When a default-profile binding key is permanently discarded, the old
+            path-type DID may be deactivated and replaced by a new DID containing a
+            new fingerprint. Stable naming and migration are handled by an
+            upper-layer mechanism.
+          </p>
+        </section>
+
+        <section id="did-wba-document-proof">
+          <h4>DID Document Proof</h4>
+          <p>
+            For the default <code>e1_</code> profile, the top-level
+            <code>proof</code> is REQUIRED. For another profile, the presence and
+            processing of a top-level proof are governed by that profile.
+          </p>
+          <p>
+            The default proof MUST conform to
+            <a href="https://www.w3.org/TR/vc-data-integrity/">
+              Verifiable Credential Data Integrity 1.0
+            </a>
+            and
+            <a href="https://www.w3.org/TR/vc-di-eddsa/">
+              Data Integrity EdDSA Cryptosuites v1.0
+            </a>.
+          </p>
+          <table>
+            <thead>
+              <tr><th>Property</th><th>Requirement</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>type</code></td><td>REQUIRED; <code>DataIntegrityProof</code>.</td></tr>
+              <tr><td><code>cryptosuite</code></td><td>REQUIRED; <code>eddsa-jcs-2022</code>.</td></tr>
+              <tr><td><code>created</code></td><td>REQUIRED; XML Schema date-time.</td></tr>
+              <tr><td><code>verificationMethod</code></td><td>REQUIRED; a complete DID URL identifying the Ed25519 method used to generate the proof.</td></tr>
+              <tr><td><code>proofPurpose</code></td><td>REQUIRED; <code>assertionMethod</code>.</td></tr>
+              <tr><td><code>proofValue</code></td><td>REQUIRED; base58-btc Multibase value beginning with <code>z</code>.</td></tr>
+              <tr><td><code>domain</code></td><td>OPTIONAL.</td></tr>
+              <tr><td><code>challenge</code></td><td>OPTIONAL.</td></tr>
+            </tbody>
+          </table>
+          <p>The following additional constraints apply:</p>
+          <ol>
+            <li>
+              <code>proof.verificationMethod</code> MUST identify the key whose
+              thumbprint is carried in the final <code>e1_</code> path segment.
+            </li>
+            <li>
+              The resolver MUST recalculate the RFC 7638 thumbprint from that
+              Ed25519 public key and verify exact equality with the DID path value.
+            </li>
+            <li>
+              Proof generation and verification MUST follow the
+              <code>eddsa-jcs-2022</code> cryptosuite and Data Integrity processing
+              rules. This document does not redefine the cryptographic algorithm.
+            </li>
+          </ol>
+          <p>
+            Missing proof, proof-verification failure, or a mismatch between
+            <code>proof.verificationMethod</code> and the <code>e1_</code>
+            fingerprint MUST cause resolution to fail. There is no relaxed
+            no-proof mode for an <code>e1_</code> DID.
+          </p>
+          <p>
+            A non-<code>e1_</code> profile MAY define either a relaxed mode in which
+            an absent proof is accepted or a strict mode in which an absent proof is
+            a validation failure.
+          </p>
+        </section>
+      </section>
+    </section>
+
+    <section id="did-wba-security-and-privacy-considerations">
+      <h2>Security Considerations</h2>
+      <ul>
+        <li>
+          Domain control and HTTPS hosting are part of the method's trust model.
+          Resolvers MUST validate the TLS service identity and MUST NOT accept an
+          untrusted certificate or a certificate for a different DNS name.
+        </li>
+        <li>
+          Resolvers MUST restrict untrusted redirects and SHOULD limit response
+          size, fetch duration, and reachable network destinations to reduce SSRF,
+          denial-of-service, and amplification risks.
+        </li>
+        <li>
+          For an <code>e1_</code> DID, the path fingerprint and required DID
+          Document proof are both mandatory. A resolver MUST NOT substitute another
+          Ed25519 key found in the document when validating the binding.
+        </li>
+        <li>
+          The binding private key SHOULD be protected using hardware isolation, an
+          HSM, a secure enclave, or an equivalently strong key-management boundary.
+        </li>
+        <li>
+          Changing the binding key changes the path-type DID. Deployments using a
+          stable upper-layer name MUST update that mapping consistently and SHOULD
+          protect against rollback to an old DID.
+        </li>
+        <li>
+          A DID Document proof demonstrates control of the proof key and integrity
+          of the proved document. It does not replace HTTPS retrieval, DID syntax
+          validation, identifier consistency checks, or application authorization.
+        </li>
+      </ul>
+    </section>
+
+    <section id="did-wba-privacy-considerations">
+      <h2>Privacy Considerations</h2>
+      <p>
+        A stable DID can enable correlation across services. Controllers SHOULD use
+        purpose-specific, role-specific, pairwise, or short-lived DIDs when a stable
+        globally correlatable identifier is unnecessary.
+      </p>
+      <p>
+        DID resolution exposes the requested identifier to DNS and Web
+        infrastructure. Resolvers SHOULD consider privacy-preserving DNS resolution,
+        caching, and proxying appropriate to their deployment.
+      </p>
+      <p>
+        The path of a <code>did:wba</code> identifier can expose namespace or account
+        information. Controllers SHOULD avoid embedding unnecessary personal or
+        sensitive data in path segments.
+      </p>
+    </section>
+  </body>
+</html>

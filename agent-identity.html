@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Agent Identity and HTTP Authentication</title>
+    <script src="https://www.w3.org/Tools/respec/respec-w3c" class="remove"></script>
+    <script class="remove">
+      var respecConfig = {
+        specStatus: "CG-DRAFT",
+        shortName: "agent-identity",
+        editors: [
+          {
+            name: "Gaowei Chang",
+            company: "ANP Open Source Community",
+            companyURL: "https://agent-network-protocol.com/"
+          }
+        ],
+        authors: [],
+        group: "cg/agentprotocol",
+        github: "w3c-cg/ai-agent-protocol"
+      };
+    </script>
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      table, th, td {
+        border: 1px solid black;
+      }
+      th, td {
+        padding: 0.5rem;
+        vertical-align: top;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+        font-variant: normal;
+        text-transform: none;
+        letter-spacing: normal;
+      }
+    </style>
+  </head>
+  <body>
+    <section id="abstract">
+      <h2>Abstract</h2>
+      <p>
+        This specification defines a DID-method-agnostic identity authentication
+        protocol for agents communicating over HTTP. A client identifies a
+        verification method with a DID URL, signs the HTTP request using HTTP
+        Message Signatures, and binds any request content using Digest Fields. The
+        server resolves and validates the DID according to the applicable DID
+        Method Binding Profile, verifies that the selected verification method is
+        authorized for authentication, verifies replay protections, and then makes
+        a separate authorization decision.
+      </p>
+    </section>
+
+    <section id="sotd"></section>
+
+    <section id="introduction">
+      <h2>Introduction</h2>
+      <p>
+        The Agent Identity layer enables agents operated by different platforms,
+        organizations, and deployment environments to authenticate without a
+        proprietary identity federation. Decentralized Identifiers (DIDs) are used
+        as the identity primitive, while the HTTP authentication protocol remains
+        independent of any particular DID method.
+      </p>
+      <p>
+        DID creation, resolution, update, deactivation, and method-specific trust
+        guarantees are defined by the applicable DID method and by
+        <a href="did-method-profiles.html">DID Method Binding Profiles</a>. The
+        <a href="did-wba.html"><code>did:wba</code> DID Method Specification</a>
+        is maintained as a separate document.
+      </p>
+
+      <section id="scope">
+        <h3>Scope</h3>
+        <p>This specification defines:</p>
+        <ul>
+          <li>the use of a complete DID URL as the HTTP signature <code>keyid</code>;</li>
+          <li>selection of a DID resolver from the DID method name;</li>
+          <li>verification of the DID Document and the <code>authentication</code> relationship;</li>
+          <li>HTTP request signing using RFC 9421 HTTP Message Signatures;</li>
+          <li>request-body integrity using RFC 9530 Digest Fields;</li>
+          <li>timestamp, nonce, and replay protection requirements;</li>
+          <li>an optional access-token optimization after successful authentication;</li>
+          <li>the boundary between authentication and authorization.</li>
+        </ul>
+        <p>This specification does not define:</p>
+        <ul>
+          <li>the lifecycle operations of any DID method;</li>
+          <li>application-specific permissions or authorization policy;</li>
+          <li>the semantics of application-specific DID service entries;</li>
+          <li>end-to-end encryption or group messaging protocols;</li>
+          <li>a mandatory access-token format beyond the requirements stated here.</li>
+        </ul>
+      </section>
+
+      <section id="related-documents">
+        <h3>Related Documents</h3>
+        <ul>
+          <li><a href="protocol.html">AI Agent Protocol Specification</a></li>
+          <li><a href="did-method-profiles.html">DID Method Binding Profiles</a></li>
+          <li><a href="did-wba.html"><code>did:wba</code> DID Method Specification</a></li>
+        </ul>
+      </section>
+    </section>
+
+    <section id="conformance">
+      <h2>Conformance</h2>
+      <p>
+        As well as sections marked as non-normative, all authoring guidelines,
+        diagrams, examples, and notes in this specification are non-normative.
+        Everything else in this specification is normative.
+      </p>
+      <p>
+        The key words MAY, MUST, MUST NOT, SHOULD, and SHOULD NOT in this document
+        are to be interpreted as described in
+        <a href="https://www.rfc-editor.org/rfc/rfc2119">RFC 2119</a> and
+        <a href="https://www.rfc-editor.org/rfc/rfc8174">RFC 8174</a> when, and
+        only when, they appear in all capitals.
+      </p>
+      <p>
+        A conforming implementation of the AI Agent Protocol Web DID profile MUST
+        support the <code>did:wba</code>, <code>did:web</code>, and
+        <code>did:webvh</code> Binding Profiles defined in
+        <a href="did-method-profiles.html">DID Method Binding Profiles</a>.
+        Implementations MAY support additional DID methods through additional
+        binding profiles.
+      </p>
+    </section>
+
+    <section id="terminology">
+      <h2>Terminology</h2>
+      <dl>
+        <dt><dfn>Agent Identity</dfn></dt>
+        <dd>The DID authenticated by the process defined in this specification.</dd>
+
+        <dt><dfn>DID Method Binding Profile</dfn></dt>
+        <dd>
+          A set of method-specific resolution, validation, and security rules that
+          connects a DID method to the common authentication protocol.
+        </dd>
+
+        <dt><dfn>binding key</dfn></dt>
+        <dd>
+          A verification method whose key material is cryptographically bound to a
+          method-specific identifier. The term applies only where the selected DID
+          method defines such a binding.
+        </dd>
+
+        <dt><dfn>verifier</dfn></dt>
+        <dd>The HTTP server that authenticates a signed request.</dd>
+      </dl>
+    </section>
+
+    <section id="identity-model">
+      <h2>Agent Identity Model</h2>
+      <span id="agent-identity-overview"></span>
+
+      <section id="design-principles">
+        <h3>Design Principles</h3>
+        <span id="agent-identity-design-principles"></span>
+        <p>
+          The design reuses mature Web infrastructure, including DNS, HTTPS, Web
+          PKI, HTTP caching, and ordinary Web hosting, while preserving the
+          decentralized identity model. Each platform may retain its own account
+          and domain management system, while agents interoperate through resolvable
+          DID Documents and standardized verification methods.
+        </p>
+        <p>
+          Common authentication and authorization behavior is defined independently
+          of any one DID method. Creation, resolution, update, deactivation, and
+          method-specific validation remain governed by the selected DID method.
+          An implementation MUST NOT assume that a security property defined by one
+          DID method also applies to another DID method.
+        </p>
+        <p>
+          The DID method name encoded in the DID is authoritative. Implementations
+          MUST select the resolver and Binding Profile from the DID itself and MUST
+          NOT require duplicate metadata declaring the same DID method.
+        </p>
+        <p>
+          A DID is a verifiable identifier and is not necessarily a stable
+          human-readable name. Rotation and persistence semantics are method-specific.
+          An upper-layer naming system MAY provide stable user-facing references.
+        </p>
+      </section>
+
+      <section id="authentication-authorization-boundary">
+        <h3>Authentication and Authorization Boundary</h3>
+        <p>
+          Successful authentication establishes control of a verification method
+          authorized by the DID Document's <code>authentication</code> relationship.
+          It does not grant access to any resource.
+        </p>
+        <p>
+          After authentication succeeds, the server MUST independently evaluate its
+          authorization policy. A server MUST return an authorization failure, such
+          as <code>403 Forbidden</code>, when the authenticated DID lacks permission
+          to access the requested resource.
+        </p>
+      </section>
+    </section>
+
+    <section id="did-resolution">
+      <h2>DID Resolution and Verification Method Selection</h2>
+      <p>
+        The <code>keyid</code> parameter in <code>Signature-Input</code> MUST be an
+        absolute DID URL that identifies a verification method. The verifier MUST
+        extract the primary DID from that DID URL and select the corresponding DID
+        Method Binding Profile from the method name encoded in the DID.
+      </p>
+      <p>The verifier MUST perform the following steps:</p>
+      <ol>
+        <li>Validate that <code>keyid</code> is a syntactically valid absolute DID URL.</li>
+        <li>Extract the primary DID from <code>keyid</code>.</li>
+        <li>Select a supported DID Method Binding Profile based only on the DID method name.</li>
+        <li>Resolve and validate the DID according to that Binding Profile.</li>
+        <li>Verify that the resolved DID Document <code>id</code> matches the requested DID.</li>
+        <li>Verify that the DID has not been reported as deactivated.</li>
+        <li>Dereference <code>keyid</code> to a verification method in the validated DID Document.</li>
+        <li>Verify that the verification method is authorized by the <code>authentication</code> relationship.</li>
+        <li>Apply every additional method-specific postcondition defined by the selected Binding Profile.</li>
+      </ol>
+      <p>
+        Resolution or validation failure MUST fail authentication. An implementation
+        MUST NOT fall back to another DID method and MUST NOT use an unvalidated DID
+        Document merely because it contains a matching public key.
+      </p>
+    </section>
+
+    <section id="http-authentication">
+      <h2>Cross-Platform Identity Authentication over HTTP</h2>
+      <span id="did-wba-cross-platform-http-authentication"></span>
+      <p>
+        A client authenticates the server using HTTPS and authenticates itself by
+        signing the HTTP request with a verification method authorized by its DID
+        Document. The verifier resolves and validates the DID, verifies the
+        verification relationship, validates the request signature, and separately
+        evaluates authorization.
+      </p>
+      <p>
+        The first request uses the <code>Signature-Input</code> and
+        <code>Signature</code> fields defined by
+        <a href="https://www.rfc-editor.org/rfc/rfc9421">RFC 9421</a>. When a
+        request contains a message body, it also uses the
+        <code>Content-Digest</code> field defined by
+        <a href="https://www.rfc-editor.org/rfc/rfc9530">RFC 9530</a>.
+      </p>
+
+      <figure style="margin: 16px 0;">
+        <pre><code>sequenceDiagram
+    participant Client as Agent Client
+    participant Server as Agent Server
+    participant Resolver as DID Resolver
+
+    Client-&gt;&gt;Server: Signed HTTP request
+    Server-&gt;&gt;Resolver: Resolve DID selected from keyid
+    Resolver-&gt;&gt;Resolver: Apply method-specific validation
+    Resolver--&gt;&gt;Server: Validated DID Document
+    Server-&gt;&gt;Server: Verify authentication relationship,
+                    HTTP signature, digest, time, and replay state
+    Server-&gt;&gt;Server: Evaluate authorization independently
+    Server--&gt;&gt;Client: HTTP response; optional access token
+
+    Client-&gt;&gt;Server: Subsequent request with access token
+    Server--&gt;&gt;Client: HTTP response</code></pre>
+        <figcaption style="text-align: center; color: #555;">
+          DID-method-agnostic authentication flow
+        </figcaption>
+      </figure>
+
+      <section id="initial-request">
+        <h3>Initial Request</h3>
+        <span id="did-wba-http-initial-request"></span>
+
+        <section id="request-header-format">
+          <h4>Request Header Format</h4>
+          <span id="did-wba-http-request-header-format"></span>
+          <p>
+            Clients MUST send authentication information using the
+            <code>Signature-Input</code> and <code>Signature</code> fields defined by
+            RFC 9421. When a request includes a message body, the client MUST also
+            send <code>Content-Digest</code> as defined by RFC 9530.
+          </p>
+          <p>The minimum signature coverage set is:</p>
+          <ul>
+            <li><code>@method</code>;</li>
+            <li><code>@target-uri</code>;</li>
+            <li><code>content-digest</code>, when the request contains a message body.</li>
+          </ul>
+          <p>Recommended additional covered components are:</p>
+          <ul>
+            <li><code>@authority</code>;</li>
+            <li><code>content-type</code>;</li>
+            <li><code>content-length</code>.</li>
+          </ul>
+          <p>The signature parameters have the following requirements:</p>
+          <ul>
+            <li>
+              <code>keyid</code>: MUST be a complete DID URL identifying a
+              verification method in the client's DID Document.
+            </li>
+            <li><code>created</code>: MUST be present.</li>
+            <li><code>expires</code>: SHOULD be present.</li>
+            <li>
+              <code>nonce</code>: MAY be present. If the server issued a challenge
+              nonce, the client MUST use that nonce.
+            </li>
+            <li>
+              <code>alg</code>: OPTIONAL. A verifier may determine the algorithm from
+              the verification method type identified by <code>keyid</code>.
+            </li>
+          </ul>
+          <p>
+            The client MUST sign with a key authorized by the DID Document's
+            <code>authentication</code> relationship. Any additional key-selection
+            requirement is defined by the selected DID Method Binding Profile.
+          </p>
+
+          <p class="example">Signed request using a <code>did:web</code> identity:</p>
+          <pre><code>POST /orders HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+Content-Digest: sha-256=:BASE64_SHA256_DIGEST:
+Signature-Input: sig1=("@method" "@target-uri" "@authority" "content-digest");created=1733402096;expires=1733402156;nonce="abc123";keyid="did:web:client.example:agents:alice#key-1"
+Signature: sig1=:BASE64_SIGNATURE:</code></pre>
+        </section>
+
+        <section id="signature-generation">
+          <h4>Signature Generation</h4>
+          <span id="did-wba-http-signature-generation-process"></span>
+          <ol>
+            <li>
+              If the request contains a message body, calculate
+              <code>Content-Digest</code> according to RFC 9530.
+            </li>
+            <li>
+              Select a verification method authorized for
+              <code>authentication</code> and permitted by the selected DID Method
+              Binding Profile.
+            </li>
+            <li>
+              Construct <code>Signature-Input</code>, covering at least the required
+              components defined above.
+            </li>
+            <li>Construct the signature base according to RFC 9421.</li>
+            <li>Sign the signature base using the selected private key.</li>
+            <li>
+              Send <code>Signature-Input</code>, <code>Signature</code>, and, when
+              applicable, <code>Content-Digest</code> to the server.
+            </li>
+          </ol>
+        </section>
+      </section>
+
+      <section id="server-verification">
+        <h3>Server-Side Verification</h3>
+        <span id="did-wba-http-server-side-verification"></span>
+        <p>The verifier MUST perform the following checks:</p>
+        <ol>
+          <li>
+            Verify that <code>Signature-Input</code> and <code>Signature</code> are
+            present and syntactically valid.
+          </li>
+          <li>
+            When the request contains a message body, verify
+            <code>Content-Digest</code> against the received content.
+          </li>
+          <li>Extract <code>keyid</code> and the primary DID.</li>
+          <li>
+            Resolve and validate the DID and verification method as specified in
+            <a href="#did-resolution">DID Resolution and Verification Method Selection</a>.
+          </li>
+          <li>
+            Apply the method-specific validation rules defined by the selected DID
+            Method Binding Profile.
+          </li>
+          <li>
+            Reconstruct the signature base from the actual request and verify the
+            HTTP Message Signature according to RFC 9421.
+          </li>
+          <li>
+            Verify that <code>created</code> and <code>expires</code> are within the
+            server's accepted time window. A window of one to five minutes is
+            recommended and MAY be configured by the deployment.
+          </li>
+          <li>Apply the replay-protection requirements below.</li>
+          <li>Evaluate authorization independently.</li>
+        </ol>
+
+        <section id="signature-verification">
+          <h4>Signature Verification</h4>
+          <span id="did-wba-http-signature-verification-process"></span>
+          <ol>
+            <li>
+              Parse the signature label, covered components, parameters, and
+              signature value.
+            </li>
+            <li>Reconstruct the signature base according to RFC 9421.</li>
+            <li>Obtain the validated verification method identified by <code>keyid</code>.</li>
+            <li>
+              Select the verification algorithm from the verification method type
+              and the supported cryptographic implementation.
+            </li>
+            <li>Verify the signature using the corresponding public key.</li>
+            <li>
+              Include the <code>Content-Digest</code> result in the authentication
+              decision whenever a message body is present.
+            </li>
+          </ol>
+        </section>
+
+        <section id="replay-protection">
+          <h4>Replay Protection</h4>
+          <ul>
+            <li>
+              The server MUST reject signatures outside its accepted
+              <code>created</code>/<code>expires</code> window.
+            </li>
+            <li>
+              For a direct proof, the server SHOULD maintain a short-term replay
+              cache keyed by <code>(keyid, nonce)</code>, <code>(keyid, jti)</code>,
+              or an equivalent unique tuple.
+            </li>
+            <li>
+              A nonce issued by a server challenge MUST be single-use.
+            </li>
+            <li>
+              The replay-cache retention period SHOULD be longer than the maximum
+              accepted signature lifetime.
+            </li>
+            <li>
+              Nonces MUST be generated using a cryptographically secure random
+              number generator.
+            </li>
+          </ul>
+        </section>
+      </section>
+
+      <section id="access-token">
+        <h3>Access Token after Successful Authentication</h3>
+        <span id="did-wba-http-access-token"></span>
+        <p>
+          After successful authentication and authorization, a server MAY return an
+          access token so that subsequent requests do not require DID resolution and
+          HTTP signature verification on every request. The token format is an
+          implementation choice. JWT, as defined by
+          <a href="https://www.rfc-editor.org/rfc/rfc7519">RFC 7519</a>, is one
+          possible format.
+        </p>
+        <p>
+          The following token-generation details are non-normative. A JWT payload
+          might contain:
+        </p>
+        <pre class="example"><code>{
+  "sub": "did:web:client.example:agents:alice",
+  "iat": 1733402096,
+  "exp": 1733488496,
+  "scope": "orders.read orders.write"
+}</code></pre>
+        <p>
+          When a token is returned using this protocol, the server MUST return it in
+          the <code>Authentication-Info</code> response field and MUST NOT place it in
+          an <code>Authorization</code> response field.
+        </p>
+        <pre class="example"><code>Authentication-Info: access_token="eyJhbGciOi...", token_type="Bearer", expires_in=3600, scope="orders.read orders.write"</code></pre>
+        <p>
+          Sender-constrained access tokens SHOULD be preferred to reduce replay risk
+          after token disclosure. This specification does not define a complete
+          sender-constrained token profile. Implementations MAY reserve a key-binding
+          claim such as <code>cnf</code> and require a proof bound to the token in
+          subsequent requests.
+        </p>
+        <p>
+          Until a sender-constrained profile is selected, a deployment MAY use
+          <code>Bearer</code>. The client sends a Bearer token in subsequent requests:
+        </p>
+        <pre class="example"><code>Authorization: Bearer &lt;access_token&gt;</code></pre>
+        <p>
+          The server MUST validate the token's signature, expiration, audience or
+          resource restrictions, subject, and authorization scope according to the
+          selected token format and local policy.
+        </p>
+      </section>
+
+      <section id="error-handling">
+        <h3>Error Handling</h3>
+        <span id="did-wba-http-error-handling"></span>
+
+        <section id="unauthorized-response">
+          <h4><code>401 Unauthorized</code></h4>
+          <p>
+            The server may return <code>401 Unauthorized</code> when signature
+            verification fails, digest verification fails, a signature is expired,
+            replay is detected, DID validation fails, or a challenge nonce is
+            required.
+          </p>
+          <p>
+            Challenge information is returned through <code>WWW-Authenticate</code>.
+            The server MAY advertise expected signature components through
+            <code>Accept-Signature</code>.
+          </p>
+          <pre class="example"><code>WWW-Authenticate: AgentDID realm="api.example.com", error="invalid_signature", error_description="Signature verification failed.", nonce="xyz987"
+Accept-Signature: sig1=("@method" "@target-uri" "@authority" "content-digest");created;expires;nonce;keyid
+Cache-Control: no-store</code></pre>
+          <p>
+            The <code>AgentDID</code> authentication scheme name is method-neutral.
+            The DID method is selected from <code>keyid</code>.
+          </p>
+          <table>
+            <thead>
+              <tr><th>Error</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>invalid_request</code></td><td>The request is malformed or missing required fields.</td></tr>
+              <tr><td><code>invalid_nonce</code></td><td>The nonce is invalid, reused, or does not match the challenge.</td></tr>
+              <tr><td><code>invalid_timestamp</code></td><td>The signature time is outside the accepted window.</td></tr>
+              <tr><td><code>invalid_did</code></td><td>The DID is malformed, cannot be resolved, or returns an invalid DID Document.</td></tr>
+              <tr><td><code>unsupported_did_method</code></td><td>The implementation does not support the DID method or Binding Profile.</td></tr>
+              <tr><td><code>invalid_did_history</code></td><td>Method-specific history validation, including <code>did:webvh</code> validation, failed.</td></tr>
+              <tr><td><code>invalid_signature</code></td><td>The HTTP Message Signature is invalid.</td></tr>
+              <tr><td><code>invalid_verification_method</code></td><td>The verification method is absent, unsupported, or not authorized for authentication.</td></tr>
+              <tr><td><code>invalid_content_digest</code></td><td>The digest does not match the request content.</td></tr>
+              <tr><td><code>invalid_access_token</code></td><td>The access token is invalid.</td></tr>
+              <tr><td><code>forbidden_did</code></td><td>The DID authenticated successfully but is not authorized.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            When a challenge nonce is returned, the client MUST generate a new
+            signature using that nonce. Clients and servers MUST limit retry counts
+            to prevent an infinite challenge loop.
+          </p>
+        </section>
+
+        <section id="forbidden-response">
+          <h4><code>403 Forbidden</code></h4>
+          <p>
+            A server should return <code>403 Forbidden</code> when identity
+            authentication succeeds but the authenticated DID lacks permission to
+            access the resource.
+          </p>
+        </section>
+      </section>
+    </section>
+
+    <section id="privacy-considerations">
+      <h2>Privacy Considerations</h2>
+      <span id="did-wba-privacy-protection-policy"></span>
+      <p>
+        Reusing the same DID across unrelated contexts can enable correlation. DID
+        providers and agents SHOULD support purpose-specific DIDs, role-specific
+        keys, or other pairwise or scoped identifiers where stable global
+        correlation is unnecessary.
+      </p>
+      <p>
+        A stable upper-layer name MAY refer to a DID that changes according to the
+        lifecycle rules of its DID method. Such naming and migration mechanisms are
+        outside this specification.
+      </p>
+      <p>
+        DID resolution can reveal which identities a verifier is contacting.
+        Implementations SHOULD consider privacy-preserving DNS resolution, caching,
+        proxying, and data-minimization policies appropriate to their environment.
+      </p>
+    </section>
+
+    <section id="security-considerations">
+      <h2>Security Considerations</h2>
+      <span id="did-wba-security-tips"></span>
+      <ul>
+        <li>
+          Private keys MUST be protected against disclosure. Hardware-backed key
+          storage, an HSM, or a system secure enclave SHOULD be used where available.
+        </li>
+        <li>
+          The verifier MUST apply the selected DID Method Binding Profile and MUST
+          NOT import method-specific assumptions from a different DID method.
+        </li>
+        <li>
+          The server MUST implement replay protection and MUST validate
+          <code>Content-Digest</code> whenever request content is present.
+        </li>
+        <li>
+          Authentication MUST remain separate from authorization. Possession of a
+          valid DID key does not imply permission to access a resource.
+        </li>
+        <li>
+          DID resolution and all protocol exchanges MUST use HTTPS where the
+          selected DID method requires HTTPS. TLS service identity validation MUST
+          use the DNS identifier in <code>subjectAltName</code> and MUST NOT rely on
+          Common Name as the service identity.
+        </li>
+        <li>
+          Resolvers SHOULD restrict redirects, response size, fetch duration,
+          network destinations, and cache behavior to reduce SSRF, denial-of-service,
+          and cache-poisoning risks.
+        </li>
+        <li>
+          Access tokens MUST have bounded lifetimes and MUST be protected in storage
+          and transit. Sender-constrained tokens SHOULD be preferred.
+        </li>
+        <li>
+          IP address and User-Agent values MAY be used as risk signals but SHOULD
+          NOT be the sole token-binding mechanism.
+        </li>
+      </ul>
+    </section>
+  </body>
+</html>

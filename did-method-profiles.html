@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>DID Method Binding Profiles for AI Agent Protocol</title>
+    <script src="https://www.w3.org/Tools/respec/respec-w3c" class="remove"></script>
+    <script class="remove">
+      var respecConfig = {
+        specStatus: "CG-DRAFT",
+        shortName: "agent-did-method-profiles",
+        editors: [
+          {
+            name: "Gaowei Chang",
+            company: "ANP Open Source Community",
+            companyURL: "https://agent-network-protocol.com/"
+          }
+        ],
+        authors: [],
+        group: "cg/agentprotocol",
+        github: "w3c-cg/ai-agent-protocol"
+      };
+    </script>
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      table, th, td {
+        border: 1px solid black;
+      }
+      th, td {
+        padding: 0.5rem;
+        vertical-align: top;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+        font-variant: normal;
+        text-transform: none;
+        letter-spacing: normal;
+      }
+    </style>
+  </head>
+  <body>
+    <section id="abstract">
+      <h2>Abstract</h2>
+      <p>
+        This specification defines how <code>did:wba</code>, native
+        <code>did:web</code>, and <code>did:webvh</code> identities participate in
+        the DID-method-agnostic authentication protocol defined by
+        <a href="agent-identity.html">Agent Identity and HTTP Authentication</a>.
+        Each Binding Profile defines method-specific resolution and validation rules
+        without redefining the underlying DID method.
+      </p>
+    </section>
+
+    <section id="sotd"></section>
+
+    <section id="introduction">
+      <h2>Introduction</h2>
+      <p>
+        DID methods differ in identifier syntax, resolution, update, deactivation,
+        and trust properties. The Agent Identity protocol therefore separates its
+        common HTTP authentication algorithm from the method-specific processing
+        needed to obtain a validated DID Document.
+      </p>
+      <p>
+        This document does not redefine <code>did:web</code> or
+        <code>did:webvh</code>. It defines only the requirements that connect those
+        methods, and the separately specified <code>did:wba</code> method, to the
+        common Agent Identity protocol.
+      </p>
+    </section>
+
+    <section id="conformance">
+      <h2>Conformance</h2>
+      <p>
+        As well as sections marked as non-normative, all authoring guidelines,
+        diagrams, examples, and notes in this specification are non-normative.
+        Everything else in this specification is normative.
+      </p>
+      <p>
+        The key words MAY, MUST, MUST NOT, SHOULD, and SHOULD NOT in this document
+        are to be interpreted as described in
+        <a href="https://www.rfc-editor.org/rfc/rfc2119">RFC 2119</a> and
+        <a href="https://www.rfc-editor.org/rfc/rfc8174">RFC 8174</a> when, and
+        only when, they appear in all capitals.
+      </p>
+      <p>
+        An implementation claiming conformance to the AI Agent Protocol Web DID
+        profile MUST support the following Binding Profiles:
+      </p>
+      <ul>
+        <li><code>did:wba</code> Binding Profile;</li>
+        <li><code>did:web</code> Binding Profile;</li>
+        <li><code>did:webvh</code> Binding Profile.</li>
+      </ul>
+      <p>
+        An implementation MAY support additional DID methods, but it MUST apply the
+        specification of the method encoded in each DID and MUST define or identify
+        a Binding Profile for any additional method.
+      </p>
+    </section>
+
+    <section id="profile-selection">
+      <h2>Binding Profile Selection</h2>
+      <span id="did-method-compatibility"></span>
+      <p>
+        The DID method name encoded in the DID is authoritative. A verifier MUST
+        select the resolver and Binding Profile from that method name. It MUST NOT
+        select a method from separate descriptive metadata and MUST NOT fall back to
+        another method after a resolution or validation failure.
+      </p>
+      <p>
+        The following examples identify the three required method profiles:
+      </p>
+      <pre class="example"><code>did:wba:example.com:user:alice:e1_&lt;fingerprint&gt;
+did:web:example.com:agents:alice
+did:webvh:&lt;SCID&gt;:example.com:agents:alice</code></pre>
+      <p>
+        In the <code>did:webvh</code> example, <code>&lt;SCID&gt;</code> is the
+        self-certifying identifier defined by the <code>did:webvh</code> method.
+      </p>
+    </section>
+
+    <section id="common-requirements">
+      <h2>Common Requirements</h2>
+      <p>
+        After method-specific resolution succeeds, every Binding Profile MUST
+        produce a DID Document and method metadata sufficient for the verifier to:
+      </p>
+      <ol>
+        <li>confirm that the resolved DID Document <code>id</code> matches the requested DID;</li>
+        <li>determine whether the DID is deactivated;</li>
+        <li>dereference the complete DID URL carried in <code>keyid</code>;</li>
+        <li>locate the corresponding verification method;</li>
+        <li>verify that the method is authorized by the <code>authentication</code> relationship;</li>
+        <li>apply any method-specific validation postconditions;</li>
+        <li>return failure when any required check fails.</li>
+      </ol>
+      <p>
+        A verifier MUST NOT authenticate an agent from an unvalidated document or
+        from key material that merely happens to match the request signature.
+      </p>
+    </section>
+
+    <section id="did-wba-binding-profile">
+      <h2><code>did:wba</code> Binding Profile</h2>
+      <p>
+        A <code>did:wba</code> identity MUST be created, resolved, updated, and
+        deactivated according to the
+        <a href="did-wba.html"><code>did:wba</code> DID Method Specification</a>.
+      </p>
+
+      <section id="did-wba-resolution-profile">
+        <h3>Resolution</h3>
+        <ul>
+          <li>
+            A naked-domain DID resolves through
+            <code>https://&lt;domain&gt;/.well-known/did.json</code>.
+          </li>
+          <li>
+            A path-type DID resolves through the path transformation defined by the
+            <code>did:wba</code> method specification.
+          </li>
+          <li>
+            The resolver MUST verify DID Document identifier consistency and every
+            method-specific requirement applicable to the selected
+            <code>did:wba</code> profile.
+          </li>
+        </ul>
+      </section>
+
+      <section id="did-wba-e1-profile">
+        <h3><code>e1_</code> Path Profile</h3>
+        <p>
+          For a path-type <code>did:wba</code> using the default <code>e1_</code>
+          profile, the resolver MUST validate the path-to-key binding and DID
+          Document proof defined by the <code>did:wba</code> method specification.
+        </p>
+        <p>At a minimum, the resolver MUST:</p>
+        <ol>
+          <li>require the top-level DID Document <code>proof</code>;</li>
+          <li>verify the <code>DataIntegrityProof</code> using <code>eddsa-jcs-2022</code>;</li>
+          <li>obtain the Ed25519 verification method identified by <code>proof.verificationMethod</code>;</li>
+          <li>recalculate the RFC 7638 thumbprint of the equivalent public JWK;</li>
+          <li>verify that the thumbprint equals the final <code>e1_</code> fingerprint segment.</li>
+        </ol>
+        <p>
+          A client using this profile SHOULD sign the initial HTTP authentication
+          request with the binding key. The signing key MUST be authorized by the
+          DID Document's <code>authentication</code> relationship.
+        </p>
+      </section>
+
+      <section id="did-wba-naked-domain-profile">
+        <h3>Naked-Domain Profile</h3>
+        <p>
+          A naked-domain <code>did:wba</code> does not contain an <code>e1_</code>
+          fingerprint. The resolver MUST NOT apply the path-binding rule to this DID
+          form. Authentication uses a verification method authorized by the resolved
+          DID Document's <code>authentication</code> relationship.
+        </p>
+      </section>
+    </section>
+
+    <section id="did-web-binding-profile">
+      <h2>Native <code>did:web</code> Binding Profile</h2>
+      <span id="native-did-web-compatibility"></span>
+
+      <section id="did-web-scope">
+        <h3>Objectives and Scope</h3>
+        <span id="appendix-b-objectives-and-scope"></span>
+        <p>
+          Native <code>did:web</code> identities participate in Agent Identity
+          without migration to <code>did:wba</code>. Creation, resolution, update,
+          and deactivation remain governed by the
+          <a href="https://w3c-ccg.github.io/did-method-web/">
+            <code>did:web</code> Method Specification
+          </a>.
+        </p>
+      </section>
+
+      <section id="did-web-resolution-profile">
+        <h3>Resolution and Validation</h3>
+        <span id="appendix-b-parsing-and-verification-rules"></span>
+        <p>A verifier MUST:</p>
+        <ol>
+          <li>parse and resolve the DID according to the native <code>did:web</code> rules;</li>
+          <li>retrieve the DID Document over HTTPS from the location produced by the method transformation;</li>
+          <li>verify that the DID Document <code>id</code> exactly matches the requested DID;</li>
+          <li>locate the verification method identified by <code>keyid</code>;</li>
+          <li>verify that the verification method is authorized by <code>authentication</code>;</li>
+          <li>apply the common Agent Identity authentication process.</li>
+        </ol>
+        <p>
+          TLS service identity verification MUST use the DNS identifier in the
+          certificate's <code>subjectAltName</code> extension. Implementations MUST
+          NOT rely on Common Name as the service identity.
+        </p>
+      </section>
+
+      <section id="did-web-excluded-requirements">
+        <h3>Excluded <code>did:wba</code> Requirements</h3>
+        <p>A verifier MUST NOT require a native <code>did:web</code> identity to satisfy:</p>
+        <ul>
+          <li>a <code>did:wba</code> path-binding public-key fingerprint;</li>
+          <li><code>did:wba</code> path-profile semantics;</li>
+          <li><code>did:wba</code> rotation semantics;</li>
+          <li>a <code>did:wba</code>-specific top-level DID Document proof.</li>
+        </ul>
+        <p>
+          If the DID Document contains a standard proof, an implementation MAY
+          verify that proof according to its declared cryptographic suite and local
+          policy. Such a proof is not a prerequisite for native <code>did:web</code>
+          resolution unless required by a separately selected profile.
+        </p>
+      </section>
+
+      <section id="did-web-authentication-profile">
+        <h3>HTTP Authentication</h3>
+        <span id="appendix-b-cross-platform-authentication"></span>
+        <p>
+          The identity-binding semantics of <code>did:web</code> are supplied by
+          successful native <code>did:web</code> resolution and DID Document
+          verification, not by a <code>did:wba</code> path fingerprint.
+        </p>
+      </section>
+    </section>
+
+    <section id="did-webvh-binding-profile">
+      <h2><code>did:webvh</code> Binding Profile</h2>
+      <span id="did-webvh-compatibility-profile"></span>
+
+      <section id="did-webvh-resolution-profile">
+        <h3>Resolution and History Validation</h3>
+        <span id="did-webvh-validation"></span>
+        <p>
+          A <code>did:webvh</code> implementation MUST process the DID log according
+          to the supported version of the
+          <a href="https://identity.foundation/didwebvh/v1.0/">
+            <code>did:webvh</code> v1.0 Specification
+          </a> and MUST derive the applicable DID Document only from a valid history.
+        </p>
+        <p>At a minimum, the resolver MUST validate:</p>
+        <ul>
+          <li>the self-certifying identifier (SCID);</li>
+          <li>the ordered and hash-linked update chain;</li>
+          <li>the authorization proof for each applicable update;</li>
+          <li>the selected method version and its required parameters;</li>
+          <li>the deactivation state;</li>
+          <li>any other mandatory rule of the supported method version.</li>
+        </ul>
+        <p>
+          The verifier MUST fail resolution when the history is incomplete,
+          inconsistent, uses an unsupported method version, or fails a required
+          proof or hash-chain check. It MUST NOT authenticate an agent using an
+          unvalidated current-state document that bypasses the DID history.
+        </p>
+      </section>
+
+      <section id="did-webvh-authentication-profile">
+        <h3>HTTP Authentication</h3>
+        <p>
+          The verification method identified by <code>keyid</code> MUST exist in the
+          DID Document derived for the applicable version and MUST be authorized by
+          its <code>authentication</code> relationship.
+        </p>
+        <p>
+          The <code>did:wba</code> <code>e1_</code> path-binding and DID Document
+          proof rules MUST NOT be applied to <code>did:webvh</code>. The SCID,
+          update authorization, version, witness, portability, and deactivation
+          semantics are governed by the supported <code>did:webvh</code> method
+          version.
+        </p>
+      </section>
+    </section>
+
+    <section id="common-agent-capabilities">
+      <h2>Use by Other Agent Capabilities</h2>
+      <p>
+        After successful method-specific resolution, a supported DID method may be
+        used by other Agent Protocol capabilities according to the contents of the
+        validated DID Document and the requirements of the applicable upper-layer
+        specification.
+      </p>
+
+      <section id="service-entry-compatibility">
+        <h3>DID Service Entries</h3>
+        <span id="appendix-b-service-compatibility"></span>
+        <p>
+          A DID Document MAY contain service entries for agent description, naming,
+          messaging, or other application functions. This specification does not
+          require support for every service type. An implementation MAY ignore an
+          unsupported service type, preserve it as metadata, or process it only when
+          it implements the specification that defines that service type.
+        </p>
+        <p>
+          <code>AgentDescription</code>, <code>ANPHandleService</code>, and
+          <code>ANPMessageService</code> are examples. Their endpoint formats and
+          processing semantics are not defined by this document.
+        </p>
+      </section>
+
+      <section id="key-agreement-compatibility">
+        <h3>Key Agreement and E2EE</h3>
+        <span id="appendix-b-e2ee"></span>
+        <p>
+          A supported DID may participate in an upper-layer end-to-end encryption
+          protocol when its validated DID Document contains a suitable verification
+          method in the <code>keyAgreement</code> relationship and the upper-layer
+          protocol supports the method's algorithm and key representation.
+        </p>
+        <p>
+          This document does not define the encryption, key schedule, message
+          protection, or group-state procedures of an E2EE protocol.
+        </p>
+      </section>
+    </section>
+
+    <section id="implementation-recommendations">
+      <h2>Implementation Requirements Summary</h2>
+      <span id="appendix-b-implementation-recommendations"></span>
+      <table>
+        <thead>
+          <tr>
+            <th>DID method</th>
+            <th>Required method-specific behavior</th>
+            <th>Requirements that MUST NOT be inherited</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>did:wba</code></td>
+            <td>Apply the <code>did:wba</code> method rules; for <code>e1_</code>, validate the path-to-key binding and proof.</td>
+            <td>None from another method.</td>
+          </tr>
+          <tr>
+            <td><code>did:web</code></td>
+            <td>Apply native Web resolution and DID Document verification.</td>
+            <td>No <code>did:wba</code> fingerprint, proof, or rotation requirement; no <code>did:webvh</code> history requirement.</td>
+          </tr>
+          <tr>
+            <td><code>did:webvh</code></td>
+            <td>Validate the SCID and the applicable authorized, hash-linked DID history.</td>
+            <td>No <code>did:wba</code> path-binding or document-proof requirement.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        An application MUST NOT reject a valid <code>did:web</code> or
+        <code>did:webvh</code> identity solely because it lacks
+        <code>did:wba</code>-specific path bindings or proofs.
+      </p>
+    </section>
+
+    <section id="security-considerations">
+      <h2>Security Considerations</h2>
+      <ul>
+        <li>
+          A verifier MUST apply the Binding Profile selected from the method name
+          encoded in the DID. Profile confusion can cause invalid trust assumptions.
+        </li>
+        <li>
+          Resolution failure MUST fail authentication. A verifier MUST NOT use an
+          unvalidated current-state document or a cached document whose validation
+          state and integrity are unknown.
+        </li>
+        <li>
+          Implementations SHOULD constrain redirects, response sizes, fetch duration,
+          network destinations, and cache entries during Web-based DID resolution.
+        </li>
+        <li>
+          A <code>did:webvh</code> resolver MUST validate the history required by the
+          supported method version and MUST NOT skip invalid intermediate updates.
+        </li>
+        <li>
+          A <code>did:wba</code> resolver MUST fail an <code>e1_</code> resolution
+          when the path binding or required DID Document proof fails.
+        </li>
+        <li>
+          Method-specific validation establishes identifier state and control; it
+          does not replace HTTP signature verification or application authorization.
+        </li>
+      </ul>
+    </section>
+
+    <section id="privacy-considerations">
+      <h2>Privacy Considerations</h2>
+      <p>
+        Web-based DID resolution can reveal the identifiers a verifier is resolving
+        and can enable correlation across interactions. Implementations SHOULD use
+        caching, privacy-preserving DNS resolution, scoped identifiers, and data
+        minimization as appropriate to their deployment.
+      </p>
+      <p>
+        A method's persistence and update model can affect linkability. Applications
+        MUST NOT assume that all supported DID methods have equivalent privacy,
+        rotation, or recovery properties.
+      </p>
+    </section>
+  </body>
+</html>
