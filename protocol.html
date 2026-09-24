@@ -1143,10 +1143,10 @@ Cache-Control: no-store</code></pre>
         <p>An accountability record consists of three independently verifiable parts along the life of an action:</p>
         <ul>
           <li><strong>Commitment</strong>: states who was authorized to do what, under which delegation chain.</li>
-          <li><strong>Decision</strong>: states what authority, context, and evidence were evaluated at the moment of action, and binds the decision basis the agent applied.</li>
+          <li><strong>Decision</strong>: states what authority, context, and evidence were evaluated at the moment of action, and binds the recorded decision basis.</li>
           <li><strong>Receipt</strong>: states what occurred, signed after the fact, carrying a <code>result_class</code> of <code>success</code>, <code>partial_success</code>, <code>failure</code>, or <code>unknown</code>.</li>
         </ul>
-        <p>Denial is recorded in the decision record, and out-of-scope effects in observed-outcome fields, so outcome classification remains unambiguous. Each part references the next by content hash and none embeds another, so an auditor can request only the layer it needs. Whether an underlying claim was true is referenced from a separate belief layer and is not inlined: these records carry admissibility evidence and do not assert truth. Serialization rides on W3C Verifiable Credentials linked by digest; no new envelope format is required.</p>
+        <p>Denial is recorded in the decision record, and out-of-scope effects in observed-outcome fields, so outcome classification remains unambiguous. Each part references the next by content hash and none embeds another, so an auditor can request only the layer it needs. Whether an underlying claim was true is referenced from a separate belief layer and is not inlined: these records carry admissibility evidence and do not assert truth. Content-hash links establish which records are cryptographically linked, and a recomputed correlation key establishes agreement on the disclosed correlation inputs. Neither by itself establishes that the content of a decision record produced or selected the action a receipt describes. That relation needs separate evidence. Serialization rides on W3C Verifiable Credentials linked by digest; no new envelope format is required.</p>
       </section>
       
       <section id="action-ref-correlation">
