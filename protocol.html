@@ -491,9 +491,13 @@
         </p>
         <p>
           The authorization architecture has two complementary paths. The OAuth
-          Profile uses the Agent DID as a client identifier and reuses OAuth
-          grants and resource-specific access tokens for authorization managed
-          by the resource side. The VC workstream addresses portable delegation
+          Profile associates the Agent DID with a standard HTTPS Client ID
+          Metadata Document (CIMD) URL and uses that URL as its OAuth client
+          identifier. Compatible CIMD authorization servers reuse standard
+          client authentication, grants, and resource-specific access tokens
+          without a DID-specific change; explicitly advertised DID-bound
+          processing adds verification of the DID association. The VC workstream
+          addresses portable delegation
           and organization-role credentials that an Agent presents to a verifier,
           which independently evaluates issuer authority, holder binding,
           credential status, permissions, constraints, and local policy.
@@ -501,7 +505,8 @@
         <p>
           The companion <a href="agent-authorization.html">Agent Authorization</a>
           specification defines client metadata and admission, authorization-server
-          discovery, DID-backed client authentication, authorization flows, token
+          discovery, standard client authentication and optional DID binding,
+          authorization flows, token
           enforcement, revocation and lifecycle controls, security requirements,
           and conformance criteria. Its
           <a href="agent-authorization.html#vc-authorization">detailed VC section
