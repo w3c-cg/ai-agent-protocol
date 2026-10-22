@@ -1,4 +1,4 @@
-"""Structural checks for the split Agent Identity documents."""
+"""Structural checks for the protocol and its companion specifications."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ SPEC_FILES = (
     "agent-identity.html",
     "did-method-profiles.html",
     "did-wba.html",
+    "agent-authorization.html",
 )
 SECTION_TOKEN_RE = re.compile(r"<section\b[^>]*>|</section\s*>", re.IGNORECASE)
 ID_RE = re.compile(r'\sid=["\']([^"\']+)["\']', re.IGNORECASE)
@@ -28,6 +29,8 @@ REQUIRED_PROTOCOL_ANCHORS = (
     "did-wba-cross-platform-http-authentication",
     "did-resolution",
     "native-did-web-compatibility",
+    "agent-authorization",
+    "agent-authorization-overview",
 )
 
 
@@ -87,7 +90,7 @@ class IdentityDocumentStructureTest(unittest.TestCase):
         self.assertEqual(missing, [])
 
     def test_companion_specs_are_complete_html_documents(self):
-        for name in ("agent-identity.html", "did-method-profiles.html", "did-wba.html"):
+        for name in SPEC_FILES[1:]:
             html = read_spec(name)
             with self.subTest(name=name):
                 self.assertIn("<!doctype html>", html.lower())
